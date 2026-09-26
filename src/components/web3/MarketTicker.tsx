@@ -12,9 +12,25 @@ function formatUsd(value: number | null): string {
   return `$${value.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
 
-function chipTone(status: "loading" | "ok" | "error", value: number | null): string {
-  if (status === "error" || value == null) return "border-neon-blue/20 text-muted";
-  return "border-neon-cyan/30 bg-neon-cyan/5 text-neon-cyan";
+function chipTone(
+  status: "loading" | "ok" | "error",
+  value: number | null,
+  symbol: string,
+): string {
+  if (status === "error" || value == null) {
+    return "border-neon-blue/20 text-muted";
+  }
+
+  const tones: Record<string, string> = {
+    BTC: "border-[#f7931a]/60 bg-[#f7931a]/10 text-[#ffb45a] shadow-[0_0_8px_rgba(247,147,26,0.12)]",
+    ETH: "border-slate-300/45 bg-slate-200/10 text-slate-100 shadow-[0_0_8px_rgba(226,232,240,0.1)]",
+    BNB: "border-[#f3ba2f]/60 bg-[#f3ba2f]/10 text-[#ffe08a] shadow-[0_0_8px_rgba(243,186,47,0.12)]",
+    SOL: "border-[#14f1d9]/60 bg-[#14f1d9]/10 text-[#6fffe9] shadow-[0_0_8px_rgba(20,241,217,0.12)]",
+    XTZ: "border-[#2f7df6]/60 bg-[#2f7df6]/10 text-[#75a8ff] shadow-[0_0_8px_rgba(47,125,246,0.12)]",
+    POL: "border-neon-violet/60 bg-neon-violet/10 text-[#d8a4ff] shadow-[0_0_8px_rgba(168,85,247,0.12)]",
+  };
+
+  return tones[symbol] ?? "border-neon-cyan/30 bg-neon-cyan/5 text-neon-cyan";
 }
 
 function CoinChip({ coin, status, className = "" }: {
@@ -25,7 +41,7 @@ function CoinChip({ coin, status, className = "" }: {
   const label = status === "loading" && coin.usd == null ? "…" : formatUsd(coin.usd);
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded border px-1.5 py-0.5 sm:px-2 ${chipTone(status, coin.usd)} ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded border px-1.5 py-0.5 sm:px-2 ${chipTone(status, coin.usd, coin.symbol)} ${className}`}
       title={`${coin.name} · market cap rank #${coin.marketCapRank}`}
     >
       {coin.image ? (
