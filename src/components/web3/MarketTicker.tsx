@@ -97,6 +97,7 @@ export function MarketTicker() {
   const desktopPrimary = useMemo(() => coins.slice(0, DESKTOP_VISIBLE), [coins]);
   const desktopOverflow = useMemo(() => coins.slice(DESKTOP_VISIBLE), [coins]);
   const mobilePrimary = useMemo(() => coins.slice(0, MOBILE_VISIBLE), [coins]);
+  const mobileOverflow = useMemo(() => coins.slice(MOBILE_VISIBLE), [coins]);
   const title = data
     ? `Updated ${data.updatedAt} · Top ${coins.length} by USD market cap · CoinGecko`
     : status === "error" ? "Price feed offline" : "Loading market feed";
@@ -131,6 +132,25 @@ export function MarketTicker() {
         {mobilePrimary.map((coin) => (
           <CoinChip key={`m-${coin.id}`} coin={coin} status={status} className="inline-flex" />
         ))}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="rounded border border-neon-cyan/30 bg-void/60 px-1.5 py-0.5 text-neon-cyan/80"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-label={`Show ${mobileOverflow.length} more prices`}
+          >
+            +{mobileOverflow.length}
+          </button>
+          {open && (
+            <div className="absolute right-0 top-full z-40 mt-1 flex w-max max-w-[calc(100vw-2rem)] max-h-[60vh] flex-col items-stretch gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+              {mobileOverflow.map((coin) => (
+                <CoinChip key={`mo-${coin.id}`} coin={coin} status={status} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
