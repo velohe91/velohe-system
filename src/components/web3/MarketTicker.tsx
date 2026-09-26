@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MarketCoinQuote, MarketPricesResponse } from "@/lib/types";
 
 const POLL_MS = 45_000;
-const DESKTOP_VISIBLE = 10;
+const DESKTOP_VISIBLE = 9;
 const MOBILE_VISIBLE = 2;
 const EMPTY_COINS: MarketCoinQuote[] = [];
 
