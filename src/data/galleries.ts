@@ -29,7 +29,7 @@ export const galleryHubEntries: GalleryHubEntry[] = [
     seriesHint: "CyborgPunks · VΣLOHE SYSTEM · Lunarya",
     cta: "Enter Archive",
     accent: "cyan",
-    status: "online",
+    status: "standby",
   },
   {
     id: "exhibition-node",
