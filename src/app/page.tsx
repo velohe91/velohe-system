@@ -5,6 +5,7 @@ import { AnimatedLogo } from "@/components/home/AnimatedLogo";
 import { SystemBootSequence } from "@/components/home/SystemBootSequence";
 import { EnterArchiveButton } from "@/components/home/EnterArchiveButton";
 import { PlayGameButton } from "@/components/home/PlayGameButton";
+import { MintSoonButton } from "@/components/home/MintSoonButton";
 import { SITE_TAGLINE } from "@/lib/constants";
 import { motion } from "framer-motion";
 
@@ -42,6 +43,7 @@ export default function HomePage() {
         <SystemBootSequence />
         <EnterArchiveButton />
         <PlayGameButton />
+        <MintSoonButton />
       </div>
     </section>
   );
