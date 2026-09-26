@@ -93,6 +93,11 @@ export function getEvmExplorerUrl(chainId: number, address: string): string {
     8453: `https://basescan.org/address/${address}`,
     137: `https://polygonscan.com/address/${address}`,
     56: `https://bscscan.com/address/${address}`,
+    42161: `https://arbiscan.io/address/${address}`,
+    10: `https://optimistic.etherscan.io/address/${address}`,
+    43114: `https://snowtrace.io/address/${address}`,
+    4663: `https://robinhoodchain.blockscout.com/address/${address}`,
+    5042: `https://explorer.arc.io/address/${address}`,
   };
   return map[chainId] ?? `https://etherscan.io/address/${address}`;
 }
