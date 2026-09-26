@@ -151,7 +151,7 @@ export function ChainConnectModal({ open, onClose, onOpenEvm }: Props) {
                   EVM
                 </span>
                 <span className="mt-0.5 block font-mono text-[10px] text-muted">
-                  ETH / BASE / BNB / POL
+                  ETH / BASE / POL / BNB / ARB / OP / AVAX / RH / ARC
                 </span>
               </span>
               <span className="font-mono text-[10px] uppercase tracking-widest text-neon-cyan/80">
