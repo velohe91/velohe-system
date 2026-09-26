@@ -110,7 +110,14 @@ export function ConnectNodeButton() {
             <ChainConnectModal
               open={chainModalOpen}
               onClose={() => setChainModalOpen(false)}
-              onOpenEvm={openConnectModal}
+              onOpenEvm={() => {
+                if (evmConnected) {
+                  setChainModalOpen(false);
+                  setNetworkModalOpen(true);
+                  return;
+                }
+                openConnectModal();
+              }}
             />
             <NetworkSwitchModal
               open={networkModalOpen}
