@@ -120,6 +120,7 @@ export function ConnectNodeButton() {
               open={accountModalOpen}
               onClose={() => setAccountModalOpen(false)}
               onLinkAnother={() => setChainModalOpen(true)}
+              onSwitchNetwork={() => setNetworkModalOpen(true)}
             />
           </>
         );
