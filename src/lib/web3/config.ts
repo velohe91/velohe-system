@@ -4,7 +4,16 @@
  */
 
 import { http, createConfig, createStorage, cookieStorage } from "wagmi";
-import { base, mainnet, polygon, bsc } from "wagmi/chains";
+import {
+  arbitrum,
+  avalanche,
+  base,
+  bsc,
+  mainnet,
+  optimism,
+  polygon,
+} from "wagmi/chains";
+import { defineChain } from "viem";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
@@ -12,21 +21,81 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 
-/** Preferred chain for “Switch network” when unsupported */
-export const PRIMARY_CHAIN = base;
+/** Preferred chain for the initial EVM connection / RainbowKit state. */
+export const PRIMARY_CHAIN = mainnet;
+
+/** Custom EVM networks not currently provided by wagmi/chains. */
+export const robinhood = defineChain({
+  id: 4663,
+  name: "Robinhood Chain",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Ether",
+    symbol: "ETH",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.mainnet.chain.robinhood.com"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Robinhood Blockscout",
+      url: "https://robinhoodchain.blockscout.com",
+    },
+  },
+});
+
+export const arc = defineChain({
+  id: 5042,
+  name: "Arc",
+  nativeCurrency: {
+    decimals: 18,
+    name: "USD Coin",
+    symbol: "USDC",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.mainnet.arc.io"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Arc Explorer",
+      url: "https://explorer.arc.io",
+    },
+  },
+});
 
 /**
  * Supported EVM networks (display / connect order).
- * Base → Ethereum → Polygon → BSC
+ * Ethereum → Base → Polygon → BNB → Arbitrum → Optimism → Avalanche → Robinhood → Arc
+ *
+ * Solana / Tezos remain outside wagmi and are handled by MultiChainProvider.
  */
-export const SUPPORTED_CHAINS = [base, mainnet, polygon, bsc] as const;
+export const SUPPORTED_CHAINS = [
+  mainnet,
+  base,
+  polygon,
+  bsc,
+  arbitrum,
+  optimism,
+  avalanche,
+  robinhood,
+  arc,
+] as const;
 
 /** Short cyberpunk labels for the header network badge */
 export const CHAIN_BADGE_LABELS: Record<number, string> = {
-  [base.id]: "BASE",
   [mainnet.id]: "ETHEREUM",
+  [base.id]: "BASE",
   [polygon.id]: "POLYGON",
   [bsc.id]: "BSC",
+  [arbitrum.id]: "ARBITRUM",
+  [optimism.id]: "OPTIMISM",
+  [avalanche.id]: "AVALANCHE",
+  [robinhood.id]: "ROBINHOOD",
+  [arc.id]: "ARC",
 };
 
 export function getChainBadgeLabel(
@@ -62,12 +131,17 @@ export function getWagmiConfig() {
 
   return createConfig({
     connectors,
-    chains: [base, mainnet, polygon, bsc],
+    chains: SUPPORTED_CHAINS,
     transports: {
-      [base.id]: http(),
       [mainnet.id]: http(),
+      [base.id]: http(),
       [polygon.id]: http(),
       [bsc.id]: http(),
+      [arbitrum.id]: http(),
+      [optimism.id]: http(),
+      [avalanche.id]: http(),
+      [robinhood.id]: http(),
+      [arc.id]: http(),
     },
     ssr: true,
     storage: createStorage({
