@@ -17,6 +17,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onLinkAnother: () => void;
+  onSwitchNetwork: () => void;
 };
 
 async function copyText(text: string) {
@@ -31,7 +32,12 @@ async function copyText(text: string) {
  * Custom VΣLOHE account panel — replaces RainbowKit openAccountModal.
  * Portaled to document.body so navbar backdrop-filter cannot clip it.
  */
-export function NodeAccountModal({ open, onClose, onLinkAnother }: Props) {
+export function NodeAccountModal({
+  open,
+  onClose,
+  onLinkAnother,
+  onSwitchNetwork,
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const { address, chain, isConnected } = useAccount();
   const { data: evmBalance } = useBalance({
@@ -141,6 +147,16 @@ export function NodeAccountModal({ open, onClose, onLinkAnother }: Props) {
                   Disconnect
                 </button>
               </div>
+              <button
+                type="button"
+                className="mt-2 w-full rounded border border-neon-blue/30 px-2 py-1.5 font-mono text-[9px] uppercase tracking-widest text-neon-blue hover:bg-neon-blue/10"
+                onClick={() => {
+                  onClose();
+                  onSwitchNetwork();
+                }}
+              >
+                Switch Network
+              </button>
             </article>
           )}
 
