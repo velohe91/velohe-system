@@ -9,6 +9,7 @@ import { SUPPORTED_CHAINS } from "@/lib/web3/config";
 type Props = {
   open: boolean;
   onClose: () => void;
+  onNetworkChanged?: () => void;
 };
 
 const EVM_ROWS = SUPPORTED_CHAINS.map((chain) => ({
@@ -21,7 +22,11 @@ const EVM_ROWS = SUPPORTED_CHAINS.map((chain) => ({
  * MultiChainProvider (never added to wagmi chains).
  * Portaled to document.body so navbar backdrop-filter cannot clip it.
  */
-export function NetworkSwitchModal({ open, onClose }: Props) {
+export function NetworkSwitchModal({
+  open,
+  onClose,
+  onNetworkChanged,
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const { chain } = useAccount();
   const { switchChain, isPending } = useSwitchChain();
@@ -76,7 +81,10 @@ export function NetworkSwitchModal({ open, onClose }: Props) {
     switchChain(
       { chainId },
       {
-        onSuccess: () => onClose(),
+        onSuccess: () => {
+          onClose();
+          onNetworkChanged?.();
+        },
         onError: () => {
           /* wagmi surfaces; keep modal open */
         },
