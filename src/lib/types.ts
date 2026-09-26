@@ -132,24 +132,16 @@ export type FeedFilter =
   | "system-logs"
   | "broadcasts";
 
-  export type MarketPricesResponse = {
-  btcUsd: number | null;
-  ethUsd: number | null;
-  bnbUsd: number | null;
-  solUsd: number | null;
-  polUsd: number | null;
-  /** Tezos (XTZ) USD. */
-  xtzUsd: number | null;
-  /** Alias of xtzUsd — kept so older ticker code does not break. */
-  txzUsd: number | null;
+  export type MarketCoinQuote = {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string | null;
+  usd: number | null;
+  marketCapRank: number;
+};
+
+export type MarketPricesResponse = {
   updatedAt: string;
-  sources: {
-    btc: string;
-    eth: string;
-    bsc: string;
-    sol: string;
-    pol: string;
-    xtz: string;
-    txz: string;
-    };
+  coins: MarketCoinQuote[];
 };
