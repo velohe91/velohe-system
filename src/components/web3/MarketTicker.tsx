@@ -103,27 +103,29 @@ export function MarketTicker() {
 
   return (
     <div className="relative flex min-w-0 flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider sm:gap-2 sm:text-[10px]" title={title} aria-live="polite">
-      {desktopPrimary.map((coin) => (
-        <CoinChip key={`d-${coin.id}`} coin={coin} status={status} className="hidden lg:inline-flex" />
-      ))}
-      <div className="relative hidden lg:block">
-        <button
+      <div className="hidden min-w-0 items-center gap-1.5 lg:flex">
+        {desktopPrimary.map((coin) => (
+          <CoinChip key={`d-${coin.id}`} coin={coin} status={status} />
+        ))}
+        <div className="relative">
+          <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="rounded border border-neon-cyan/30 bg-void/60 px-1.5 py-0.5 text-neon-cyan/80"
           aria-expanded={open}
           aria-haspopup="listbox"
-          aria-label={`Show ${desktopOverflow.length} more prices`}
-        >
-          +{desktopOverflow.length}
-        </button>
-        {open && (
-          <div className="absolute right-0 top-full z-40 mt-1 flex w-max max-w-[calc(100vw-2rem)] max-h-[60vh] flex-col items-stretch gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-            {desktopOverflow.map((coin) => (
-              <CoinChip key={`do-${coin.id}`} coin={coin} status={status} />
-            ))}
-          </div>
-        )}
+            aria-label={`Show ${desktopOverflow.length} more prices`}
+          >
+            +{desktopOverflow.length}
+          </button>
+          {open && (
+            <div className="absolute right-0 top-full z-40 mt-1 flex w-max max-w-[calc(100vw-2rem)] max-h-[60vh] flex-col items-stretch gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+              {desktopOverflow.map((coin) => (
+                <CoinChip key={`do-${coin.id}`} coin={coin} status={status} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex min-w-0 items-center gap-1.5 lg:hidden">
         {mobilePrimary.map((coin) => (
