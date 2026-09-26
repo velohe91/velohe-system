@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MarketCoinQuote, MarketPricesResponse } from "@/lib/types";
 
 const POLL_MS = 45_000;
-const DESKTOP_VISIBLE = 7;
+const DESKTOP_VISIBLE = 10;
 const MOBILE_VISIBLE = 2;
 const EMPTY_COINS: MarketCoinQuote[] = [];
 
@@ -64,7 +64,7 @@ function CoinChip({ coin, status, className = "" }: {
 
 /**
  * Top-20 market ticker powered by CoinGecko market-cap ranking.
- * Desktop keeps the first seven visible and exposes the remaining assets
+ * Desktop keeps the first ten visible and exposes the remaining assets
  * through a compact +N dropdown. Mobile keeps the first two visible.
  */
 export function MarketTicker() {
