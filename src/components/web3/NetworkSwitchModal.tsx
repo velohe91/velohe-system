@@ -11,12 +11,10 @@ type Props = {
   onClose: () => void;
 };
 
-const EVM_ROWS: { chainId: number; label: string }[] = [
-  { chainId: SUPPORTED_CHAINS[0].id, label: "BASE" },
-  { chainId: SUPPORTED_CHAINS[1].id, label: "ETHEREUM" },
-  { chainId: SUPPORTED_CHAINS[2].id, label: "POLYGON" },
-  { chainId: SUPPORTED_CHAINS[3].id, label: "BNB" },
-];
+const EVM_ROWS = SUPPORTED_CHAINS.map((chain) => ({
+  chainId: chain.id,
+  label: chain.name === "Robinhood Chain" ? "ROBINHOOD" : chain.name.toUpperCase(),
+}));
 
 /**
  * Custom network switcher — EVM via wagmi switchChain; Solana/Tezos via
