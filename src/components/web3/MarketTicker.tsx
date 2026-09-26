@@ -5,6 +5,7 @@ import type { MarketCoinQuote, MarketPricesResponse } from "@/lib/types";
 
 const POLL_MS = 45_000;
 const MOBILE_VISIBLE = 2;
+const EMPTY_COINS: MarketCoinQuote[] = [];
 
 function formatUsd(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "---";
@@ -54,7 +55,7 @@ function CoinChip({ coin, status, className = "" }: {
         <span aria-hidden="true" className="h-3.5 w-3.5 shrink-0 rounded-full border border-current/30 sm:h-4 sm:w-4" />
       )}
       <span className="font-semibold">{coin.symbol}</span>
-      <span className="hidden text-muted sm:inline">//</span>
+      <span className="hidden text-muted sm:inline">{"//"}</span>
       <span>{label}</span>
     </span>
   );
@@ -91,7 +92,7 @@ export function MarketTicker() {
     return () => { cancelled = true; window.clearInterval(id); };
   }, []);
 
-  const coins = data?.coins ?? [];
+  const coins = data?.coins ?? EMPTY_COINS;
   const mobilePrimary = useMemo(() => coins.slice(0, MOBILE_VISIBLE), [coins]);
   const overflow = useMemo(() => coins.slice(MOBILE_VISIBLE), [coins]);
   const title = data
