@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MarketCoinQuote, MarketPricesResponse } from "@/lib/types";
 
 const POLL_MS = 45_000;
+const DESKTOP_VISIBLE = 7;
 const MOBILE_VISIBLE = 2;
 const EMPTY_COINS: MarketCoinQuote[] = [];
 
@@ -63,8 +64,8 @@ function CoinChip({ coin, status, className = "" }: {
 
 /**
  * Top-20 market ticker powered by CoinGecko market-cap ranking.
- * Desktop shows all 20. Mobile keeps the first two visible and exposes
- * the remaining assets through a compact +N dropdown.
+ * Desktop keeps the first seven visible and exposes the remaining assets
+ * through a compact +N dropdown. Mobile keeps the first two visible.
  */
 export function MarketTicker() {
   const [data, setData] = useState<MarketPricesResponse | null>(null);
@@ -93,17 +94,38 @@ export function MarketTicker() {
   }, []);
 
   const coins = data?.coins ?? EMPTY_COINS;
+  const desktopPrimary = useMemo(() => coins.slice(0, DESKTOP_VISIBLE), [coins]);
+  const desktopOverflow = useMemo(() => coins.slice(DESKTOP_VISIBLE), [coins]);
   const mobilePrimary = useMemo(() => coins.slice(0, MOBILE_VISIBLE), [coins]);
-  const overflow = useMemo(() => coins.slice(MOBILE_VISIBLE), [coins]);
+  const mobileOverflow = useMemo(() => coins.slice(MOBILE_VISIBLE), [coins]);
   const title = data
     ? `Updated ${data.updatedAt} · Top ${coins.length} by USD market cap · CoinGecko`
     : status === "error" ? "Price feed offline" : "Loading market feed";
 
   return (
     <div className="relative flex min-w-0 flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider sm:gap-2 sm:text-[10px]" title={title} aria-live="polite">
-      {coins.map((coin) => (
-        <CoinChip key={coin.id} coin={coin} status={status} className="hidden lg:inline-flex" />
+      {desktopPrimary.map((coin) => (
+        <CoinChip key={`d-${coin.id}`} coin={coin} status={status} className="hidden lg:inline-flex" />
       ))}
+      <div className="relative hidden lg:block">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="rounded border border-neon-cyan/30 bg-void/60 px-1.5 py-0.5 text-neon-cyan/80"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label={`Show ${desktopOverflow.length} more prices`}
+        >
+          +{desktopOverflow.length}
+        </button>
+        {open && (
+          <div className="absolute right-0 top-full z-40 mt-1 flex w-max max-w-[calc(100vw-2rem)] max-h-[60vh] flex-col items-stretch gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+            {desktopOverflow.map((coin) => (
+              <CoinChip key={`do-${coin.id}`} coin={coin} status={status} />
+            ))}
+          </div>
+        )}
+      </div>
       {mobilePrimary.map((coin) => (
         <CoinChip key={`m-${coin.id}`} coin={coin} status={status} className="inline-flex lg:hidden" />
       ))}
@@ -114,13 +136,13 @@ export function MarketTicker() {
           className="rounded border border-neon-cyan/30 bg-void/60 px-1.5 py-0.5 text-neon-cyan/80"
           aria-expanded={open}
           aria-haspopup="listbox"
-          aria-label={`Show ${overflow.length} more prices`}
+          aria-label={`Show ${mobileOverflow.length} more prices`}
         >
-          +{overflow.length}
+          +{mobileOverflow.length}
         </button>
         {open && (
-          <div className="absolute right-0 top-full z-40 mt-1 flex max-h-[60vh] flex-col gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-            {overflow.map((coin) => (
+          <div className="absolute right-0 top-full z-40 mt-1 flex w-max max-w-[calc(100vw-2rem)] max-h-[60vh] flex-col items-stretch gap-1 overflow-y-auto rounded border border-neon-cyan/20 bg-void/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+            {mobileOverflow.map((coin) => (
               <CoinChip key={`o-${coin.id}`} coin={coin} status={status} />
             ))}
           </div>
