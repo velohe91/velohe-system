@@ -97,7 +97,6 @@ export function MarketTicker() {
   const desktopPrimary = useMemo(() => coins.slice(0, DESKTOP_VISIBLE), [coins]);
   const desktopOverflow = useMemo(() => coins.slice(DESKTOP_VISIBLE), [coins]);
   const mobilePrimary = useMemo(() => coins.slice(0, MOBILE_VISIBLE), [coins]);
-  const mobileOverflow = useMemo(() => coins.slice(MOBILE_VISIBLE), [coins]);
   const title = data
     ? `Updated ${data.updatedAt} · Top ${coins.length} by USD market cap · CoinGecko`
     : status === "error" ? "Price feed offline" : "Loading market feed";
