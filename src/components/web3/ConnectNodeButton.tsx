@@ -115,6 +115,7 @@ export function ConnectNodeButton() {
             <NetworkSwitchModal
               open={networkModalOpen}
               onClose={() => setNetworkModalOpen(false)}
+              onNetworkChanged={() => setAccountModalOpen(true)}
             />
             <NodeAccountModal
               open={accountModalOpen}
