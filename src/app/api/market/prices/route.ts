@@ -6,21 +6,38 @@ let cache: { at: number; body: MarketPricesResponse } | null = null;
 const CACHE_MS = 45_000;
 const CACHE_HEADERS = { "Cache-Control": "public, s-maxage=45, stale-while-revalidate=30" };
 
-type CoinGeckoMarket = {
-  id?: string; symbol?: string; name?: string; image?: string;
-  current_price?: number | null; market_cap_rank?: number | null;
+type CoinMarketCapListing = {
+  id?: number;
+  symbol?: string;
+  name?: string;
+  cmc_rank?: number | null;
+  quote?: Array<{
+    id?: number;
+    symbol?: string;
+    price?: number | null;
+  }>;
 };
 
-function toCoin(row: CoinGeckoMarket, index: number): MarketCoinQuote {
-  const usd = typeof row.current_price === "number" && Number.isFinite(row.current_price)
-    ? row.current_price : null;
-  const rank = typeof row.market_cap_rank === "number" && row.market_cap_rank > 0
-    ? row.market_cap_rank : index + 1;
+function toCoin(row: CoinMarketCapListing, index: number): MarketCoinQuote {
+  const usdQuote =
+    row.quote?.find((quote) => quote.symbol === "USD") ?? row.quote?.[0];
+  const usd =
+    typeof usdQuote?.price === "number" && Number.isFinite(usdQuote.price)
+      ? usdQuote.price
+      : null;
+  const rank =
+    typeof row.cmc_rank === "number" && row.cmc_rank > 0
+      ? row.cmc_rank
+      : index + 1;
+
   return {
-    id: row.id ?? `coin-${index}`,
+    id: typeof row.id === "number" ? String(row.id) : `coin-${index}`,
     symbol: (row.symbol ?? "").toUpperCase(),
     name: row.name ?? "",
-    image: row.image ?? null,
+    image:
+      typeof row.id === "number"
+        ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${row.id}.png`
+        : null,
     usd,
     marketCapRank: rank,
   };
@@ -29,13 +46,15 @@ function toCoin(row: CoinGeckoMarket, index: number): MarketCoinQuote {
 async function fetchTopMarkets(): Promise<MarketCoinQuote[] | null> {
   try {
     const res = await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1",
+      "https://pro-api.coinmarketcap.com/public-api/v3/cryptocurrency/listings/latest?start=1&limit=20&convert=USD",
       { next: { revalidate: 45 }, headers: { Accept: "application/json" } },
     );
     if (!res.ok) return null;
-    const raw = (await res.json()) as CoinGeckoMarket[];
-    if (!Array.isArray(raw)) return null;
-    const coins = raw.slice(0, 20).map(toCoin);
+    const payload = (await res.json()) as {
+      data?: CoinMarketCapListing[];
+    };
+    if (!Array.isArray(payload.data)) return null;
+    const coins = payload.data.slice(0, 20).map(toCoin);
     coins.sort((a, b) => a.marketCapRank - b.marketCapRank);
     return coins;
   } catch {
