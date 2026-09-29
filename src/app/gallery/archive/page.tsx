@@ -22,7 +22,7 @@ export default function ArchiveGalleryPage() {
         <SectionHeading
           eyebrow="Archive // Catalog"
           title="VΣLOHE SYSTEM Archive"
-          subtitle="Genesis CyborgPunks at the top. Lunarya cores at the base."
+          subtitle="The foundational identities of VΣLOHE SYSTEM, preserved through their on-chain records."
         />
         <NftGrid items={nfts} />
       </div>
