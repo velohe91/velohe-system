@@ -77,10 +77,19 @@ type Boss = {
   revealed: boolean;
 };
 
-type TouchState = {
+type PointerAim = {
   active: boolean;
-  x: number;
-  y: number;
+  captured: boolean;
+  pointerId: number | null;
+  clientX: number;
+  clientY: number;
+  worldX: number;
+  worldY: number;
+};
+
+type CraftBank = {
+  rotate: number;
+  skew: number;
 };
 
 const SECTORS: SectorConfig[] = [
@@ -146,7 +155,11 @@ const WORLD_HEIGHT = 560;
 const PLAYER_SIZE = 50;
 const PLAYER_SPEED = 5.00;
 const PLAYER_VERTICAL_SPEED = 5.00;
-const MOBILE_JOYSTICK_SPEED = 5.00;
+const POINTER_MAX_SPEED = PLAYER_SPEED;
+const STEER_RESPONSE = 0.2;
+const BANK_MAX_ROTATE = 10;
+const BANK_MAX_SKEW = 6;
+const BANK_RESPONSE = 0.32;
 const PLAYER_HP = 5;
 const STARTING_AMMO = 500;
 const LIFE_PICKUP_SPACING = 920;
@@ -164,7 +177,9 @@ const ENEMY_DAMAGE_COOLDOWN = 700;
 
 const VIEWPORT_WIDTH = 1000;
 const UI_TICK_MS = 50;
-const GAME_SCALE = 0.75;
+const MOBILE_GAME_SCALE = 0.62;
+const DESKTOP_GAME_SCALE = 0.92;
+const DESKTOP_FRAME_QUERY = "(min-width: 1024px)";
 
 const BOSS_REVEAL_MARGIN = VIEWPORT_WIDTH * 0.92;
 const BOSS_SHOT_COOLDOWN = 1250;
@@ -180,6 +195,63 @@ const CAPSULE_DURATION_MS = 11000;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function idlePointerAim(): PointerAim {
+  return {
+    active: false,
+    captured: false,
+    pointerId: null,
+    clientX: 0,
+    clientY: 0,
+    worldX: 0,
+    worldY: 0,
+  };
+}
+
+/** Map a viewport client point into world space. Layout pixels differ from the rendered box because the page is CSS-scaled. */
+function clientToWorld(
+  clientX: number,
+  clientY: number,
+  viewport: HTMLElement,
+  cameraX: number,
+  frameScale: number,
+): { x: number; y: number } {
+  const rect = viewport.getBoundingClientRect();
+  const layoutWidth = viewport.clientWidth || rect.width || 1;
+  const layoutHeight = viewport.clientHeight || rect.height || 1;
+  const scaleX = rect.width > 0 ? rect.width / layoutWidth : frameScale;
+  const scaleY = rect.height > 0 ? rect.height / layoutHeight : frameScale;
+
+  return {
+    x: cameraX + (clientX - rect.left) / scaleX,
+    y: (clientY - rect.top) / scaleY,
+  };
+}
+
+/** Ease `current` toward `target`. Speed stays within the existing move cap so corridor timing does not change. */
+function steerToward(current: number, target: number, dt: number): number {
+  const follow = 1 - Math.exp(-STEER_RESPONSE * dt);
+  const step = (target - current) * follow;
+  const maxStep = POINTER_MAX_SPEED * dt;
+  return current + clamp(step, -maxStep, maxStep);
+}
+
+function useGameScale(): number {
+  const [gameScale, setGameScale] = useState(MOBILE_GAME_SCALE);
+
+  useEffect(() => {
+    const media = window.matchMedia(DESKTOP_FRAME_QUERY);
+    const apply = () => {
+      setGameScale(media.matches ? DESKTOP_GAME_SCALE : MOBILE_GAME_SCALE);
+    };
+
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+
+  return gameScale;
 }
 
 function rectsOverlap(
@@ -262,6 +334,7 @@ function makeLifePickups(sectorIndex: number): LifePickup[] {
 }
 
 export default function ArcadePage() {
+  const gameScale = useGameScale();
   const [screen, setScreen] = useState<Screen>("start");
   const [sectorIndex, setSectorIndex] = useState(0);
 
@@ -289,6 +362,7 @@ export default function ArcadePage() {
   const [time, setTime] = useState(0);
   const [combo, setCombo] = useState(0);
   const [cameraX, setCameraX] = useState(0);
+  const [bank, setBank] = useState<CraftBank>({ rotate: 0, skew: 0 });
 
   const playerRef = useRef(player);
   const projectilesRef = useRef<Projectile[]>([]);
@@ -300,11 +374,14 @@ export default function ArcadePage() {
   const bossRef = useRef(boss);
 
   const keysRef = useRef<Set<string>>(new Set());
-  const touchRef = useRef<TouchState>({
-    active: false,
-    x: 0,
-    y: 0,
-  });
+  const pointerRef = useRef<PointerAim>(idlePointerAim());
+  const screenRef = useRef<Screen>(screen);
+  const ammoRef = useRef(STARTING_AMMO);
+  const shotUpgradeRef = useRef<"single" | "double">("single");
+  const bankRef = useRef<CraftBank>({ rotate: 0, skew: 0 });
+  const gameScaleRef = useRef(gameScale);
+  screenRef.current = screen;
+  gameScaleRef.current = gameScale;
 
   const lastFireRef = useRef(0);
   const lastBossShotRef = useRef(0);
@@ -318,7 +395,6 @@ export default function ArcadePage() {
   const lastUiUpdateRef = useRef(0);
   const cameraXRef = useRef(0);
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const joystickKnobRef = useRef<HTMLDivElement | null>(null);
 
   const resetSector = useCallback((index: number) => {
     const nextPlayer = {
@@ -355,6 +431,13 @@ export default function ArcadePage() {
     setHp(PLAYER_HP);
     setCombo(0);
     setCameraX(0);
+    cameraXRef.current = 0;
+    setBank({ rotate: 0, skew: 0 });
+
+    pointerRef.current = idlePointerAim();
+    ammoRef.current = STARTING_AMMO;
+    shotUpgradeRef.current = "single";
+    bankRef.current = { rotate: 0, skew: 0 };
 
     startTimeRef.current = performance.now();
     lastFireRef.current = 0;
@@ -395,77 +478,74 @@ export default function ArcadePage() {
   }, [sectorIndex]);
 
   const fire = useCallback(() => {
-    if (screen !== "playing") return;
+    if (screenRef.current !== "playing") return;
 
     const now = performance.now();
 
     if (now - lastFireRef.current < FIRE_COOLDOWN) return;
 
+    const doubleShot = shotUpgradeRef.current === "double";
+    const shotsRequired = doubleShot ? 2 : 1;
+
+    if (ammoRef.current < shotsRequired) return;
+
     lastFireRef.current = now;
+    ammoRef.current = Math.max(0, ammoRef.current - shotsRequired);
+    setAmmo(ammoRef.current);
 
     const current = playerRef.current;
-    const shotsRequired = shotUpgrade === "double" ? 2 : 1;
-
-    if (ammo < shotsRequired) return;
-
-    setAmmo((value) => Math.max(0, value - shotsRequired));
-
     const baseX = current.x + PLAYER_SIZE - 2;
     const centerY = current.y + PLAYER_SIZE / 2 - PROJECTILE_HEIGHT / 2;
 
-    const shots: Projectile[] =
-      shotUpgrade === "double"
-        ? [
-            {
-              id: projectileIdRef.current++,
-              x: baseX,
-              y: centerY - 9,
-              vx: PROJECTILE_SPEED,
-            },
-            {
-              id: projectileIdRef.current++,
-              x: baseX,
-              y: centerY + 9,
-              vx: PROJECTILE_SPEED,
-            },
-          ]
-        : [
-            {
-              id: projectileIdRef.current++,
-              x: baseX,
-              y: centerY,
-              vx: PROJECTILE_SPEED,
-            },
-          ];
+    const shots: Projectile[] = doubleShot
+      ? [
+          {
+            id: projectileIdRef.current++,
+            x: baseX,
+            y: centerY - 9,
+            vx: PROJECTILE_SPEED,
+          },
+          {
+            id: projectileIdRef.current++,
+            x: baseX,
+            y: centerY + 9,
+            vx: PROJECTILE_SPEED,
+          },
+        ]
+      : [
+          {
+            id: projectileIdRef.current++,
+            x: baseX,
+            y: centerY,
+            vx: PROJECTILE_SPEED,
+          },
+        ];
 
     projectilesRef.current = [...projectilesRef.current, ...shots];
-  }, [ammo, screen, shotUpgrade]);
+  }, []);
   useEffect(() => {
+    const movementKeys = new Set([
+      "arrowup",
+      "arrowdown",
+      "arrowleft",
+      "arrowright",
+      "w",
+      "a",
+      "s",
+      "d",
+    ]);
+
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
 
-      if (
-        [
-          "arrowup",
-          "arrowdown",
-          "arrowleft",
-          "arrowright",
-          "w",
-          "a",
-          "s",
-          "d",
-          " ",
-          "x",
-          "j",
-        ].includes(key)
-      ) {
+      if (movementKeys.has(key)) {
         event.preventDefault();
+        keysRef.current.add(key);
+        return;
       }
 
-      keysRef.current.add(key);
-
-      if (key === " " || key === "x" || key === "j") {
-        fire();
+      if (key === " " && screenRef.current === "playing") {
+        event.preventDefault();
       }
     };
 
@@ -473,14 +553,20 @@ export default function ArcadePage() {
       keysRef.current.delete(event.key.toLowerCase());
     };
 
+    const onBlur = () => {
+      pointerRef.current = idlePointerAim();
+    };
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
     };
-  }, [fire]);
+  }, []);
 
   useEffect(() => {
     if (screen !== "playing") return;
@@ -496,43 +582,68 @@ export default function ArcadePage() {
 
       const keys = keysRef.current;
       const current = playerRef.current;
+      const aim = pointerRef.current;
 
-      let dx = 0;
-      let dy = 0;
+      if (aim.active && viewportRef.current) {
+        const world = clientToWorld(
+          aim.clientX,
+          aim.clientY,
+          viewportRef.current,
+          cameraXRef.current,
+          gameScaleRef.current,
+        );
+        aim.worldX = world.x;
+        aim.worldY = world.y;
+      }
 
-      if (keys.has("arrowleft") || keys.has("a")) dx -= PLAYER_SPEED * dt;
-      if (keys.has("arrowright") || keys.has("d")) dx += PLAYER_SPEED * dt;
-      if (keys.has("arrowup") || keys.has("w")) dy -= PLAYER_VERTICAL_SPEED * dt;
-      if (keys.has("arrowdown") || keys.has("s")) dy += PLAYER_VERTICAL_SPEED * dt;
+      let nextX = current.x;
+      let nextY = current.y;
 
-      if (touchRef.current.active) {
-        const touch = touchRef.current;
-        const distanceX = touch.x;
-        const distanceY = touch.y;
-        const deadZone = 14;
-
-        if (Math.abs(distanceX) > deadZone) {
-          dx += clamp(distanceX / 30, -1, 1) * MOBILE_JOYSTICK_SPEED * dt;
-        }
-
-        if (Math.abs(distanceY) > deadZone) {
-          dy += clamp(distanceY / 30, -1, 1) * MOBILE_JOYSTICK_SPEED * dt;
-        }
-
+      if (aim.active) {
+        nextX = steerToward(current.x, aim.worldX - PLAYER_SIZE / 2, dt);
+        nextY = steerToward(current.y, aim.worldY - PLAYER_SIZE / 2, dt);
+      } else {
+        if (keys.has("arrowleft") || keys.has("a")) nextX -= PLAYER_SPEED * dt;
+        if (keys.has("arrowright") || keys.has("d")) nextX += PLAYER_SPEED * dt;
+        if (keys.has("arrowup") || keys.has("w")) nextY -= PLAYER_VERTICAL_SPEED * dt;
+        if (keys.has("arrowdown") || keys.has("s")) nextY += PLAYER_VERTICAL_SPEED * dt;
       }
 
       const bossLeftLimit = BOSS_X - PLAYER_SIZE - 28;
 
       const nextPlayer = {
-        x: clamp(current.x + dx, 28, bossLeftLimit),
+        x: clamp(nextX, 28, bossLeftLimit),
         y: clamp(
-          current.y + dy,
+          nextY,
           34,
           WORLD_HEIGHT - PLAYER_SIZE - 34,
         ),
       };
 
       playerRef.current = nextPlayer;
+
+      const stepX = nextPlayer.x - current.x;
+      const stepY = nextPlayer.y - current.y;
+      const velX = dt > 0 ? stepX / dt : 0;
+      const velY = dt > 0 ? stepY / dt : 0;
+      const bankFollow = 1 - Math.exp(-BANK_RESPONSE * dt);
+      const nextBank: CraftBank = {
+        rotate:
+          bankRef.current.rotate +
+          (clamp(velY * 1.35, -BANK_MAX_ROTATE, BANK_MAX_ROTATE) -
+            bankRef.current.rotate) *
+            bankFollow,
+        skew:
+          bankRef.current.skew +
+          (clamp(velX * 0.7, -BANK_MAX_SKEW, BANK_MAX_SKEW) -
+            bankRef.current.skew) *
+            bankFollow,
+      };
+      if (Math.abs(nextBank.rotate) < 0.05) nextBank.rotate = 0;
+      if (Math.abs(nextBank.skew) < 0.05) nextBank.skew = 0;
+      bankRef.current = nextBank;
+
+      fire();
 
       // Follow the Core using the actual rendered viewport width.
       // This keeps camera movement correct on mobile as well as desktop.
@@ -815,10 +926,12 @@ export default function ArcadePage() {
       }
 
       if (capsuleCollected) {
+        shotUpgradeRef.current = "double";
         setShotUpgrade("double");
         setUpgradeUntil(now + CAPSULE_DURATION_MS);
         nextScore += 150;
       } else if (shotUpgrade === "double" && now >= upgradeUntil) {
+        shotUpgradeRef.current = "single";
         setShotUpgrade("single");
         setUpgradeUntil(0);
       }
@@ -989,6 +1102,7 @@ export default function ArcadePage() {
         bossCurrent.active = false;
         bossCurrent.hp = 0;
         setBoss({ ...bossCurrent });
+        screenRef.current = "complete";
         setScreen("complete");
       }
 
@@ -1004,6 +1118,10 @@ export default function ArcadePage() {
         setLifePickups(nextLifePickups);
         setBoss({ ...bossCurrent });
         setCameraX(smoothCamera);
+        setBank({
+          rotate: bankRef.current.rotate,
+          skew: bankRef.current.skew,
+        });
         setTime(
           Math.floor(
             (now - startTimeRef.current) / 1000,
@@ -1030,9 +1148,16 @@ export default function ArcadePage() {
   }, [fire, screen, sectorIndex, shotUpgrade, upgradeUntil]);
   useEffect(() => {
     if (hp <= 0 && screen === "playing") {
+      screenRef.current = "gameover";
+      pointerRef.current = idlePointerAim();
       setScreen("gameover");
     }
   }, [hp, screen]);
+
+  useEffect(() => {
+    if (screen === "playing") return;
+    pointerRef.current = idlePointerAim();
+  }, [screen]);
 
   useEffect(() => {
     return () => {
@@ -1042,104 +1167,102 @@ export default function ArcadePage() {
     };
   }, []);
 
-  const handlePointerDown = (
-    event: PointerEvent<HTMLElement>,
-  ) => {
-    if (screen !== "playing") return;
-    if ((event.target as HTMLElement).closest('[data-touch-control="true"]')) {
+  const rememberPointer = (clientX: number, clientY: number) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const world = clientToWorld(
+      clientX,
+      clientY,
+      viewport,
+      cameraXRef.current,
+      gameScaleRef.current,
+    );
+    const aim = pointerRef.current;
+    aim.clientX = clientX;
+    aim.clientY = clientY;
+    aim.worldX = world.x;
+    aim.worldY = world.y;
+    aim.active = true;
+  };
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (screenRef.current !== "playing") return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    if (event.pointerType !== "mouse") {
+      event.preventDefault();
+    }
+    event.currentTarget.setPointerCapture(event.pointerId);
+    pointerRef.current.captured = true;
+    pointerRef.current.pointerId = event.pointerId;
+    rememberPointer(event.clientX, event.clientY);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (screenRef.current !== "playing") return;
+
+    const aim = pointerRef.current;
+    const mouseHover = event.pointerType === "mouse";
+    const draggingThisPointer =
+      aim.captured && aim.pointerId === event.pointerId;
+
+    if (!mouseHover && !draggingThisPointer) return;
+
+    if (event.pointerType !== "mouse") {
+      event.preventDefault();
+    }
+
+    rememberPointer(event.clientX, event.clientY);
+  };
+
+  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const aim = pointerRef.current;
+    if (aim.pointerId !== null && event.pointerId !== aim.pointerId) return;
+
+    aim.captured = false;
+    aim.pointerId = null;
+
+    if (event.pointerType === "mouse") {
+      const viewport = viewportRef.current;
+      if (!viewport) {
+        aim.active = false;
+        return;
+      }
+
+      const rect = viewport.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+
+      if (inside) {
+        rememberPointer(event.clientX, event.clientY);
+      } else {
+        aim.active = false;
+      }
       return;
     }
 
-    event.currentTarget.setPointerCapture(event.pointerId);
-
-    touchRef.current = {
-      active: true,
-      x: 0,
-      y: 0,
-    };
+    aim.active = false;
   };
 
-  const handlePointerMove = (
-    event: PointerEvent<HTMLElement>,
-  ) => {
-    if (!touchRef.current.active) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    touchRef.current.x = event.clientX - centerX;
-    touchRef.current.y = event.clientY - centerY;
+  const handlePointerLeave = (event: PointerEvent<HTMLDivElement>) => {
+    if (pointerRef.current.captured) return;
+    if (event.pointerType !== "mouse") return;
+    pointerRef.current.active = false;
   };
 
-  const handlePointerUp = () => {
-    touchRef.current.active = false;
-    touchRef.current.x = 0;
-    touchRef.current.y = 0;
-  };
+  const handleLostPointerCapture = (event: PointerEvent<HTMLDivElement>) => {
+    const aim = pointerRef.current;
+    if (aim.pointerId !== null && aim.pointerId !== event.pointerId) return;
 
-  const handleJoystickDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (screen !== "playing") return;
+    aim.captured = false;
+    aim.pointerId = null;
 
-    event.stopPropagation();
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const radius = 30;
-    const rawX = event.clientX - centerX;
-    const rawY = event.clientY - centerY;
-    const distance = Math.hypot(rawX, rawY) || 1;
-    const scale = Math.min(1, radius / distance);
-    const x = rawX * scale;
-    const y = rawY * scale;
-
-    touchRef.current = { active: true, x, y };
-
-    if (joystickKnobRef.current) {
-      joystickKnobRef.current.style.transform =
-        `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-    }
-  };
-
-  const handleJoystickMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!touchRef.current.active) return;
-
-    event.stopPropagation();
-    event.preventDefault();
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const radius = 30;
-    const rawX = event.clientX - centerX;
-    const rawY = event.clientY - centerY;
-    const distance = Math.hypot(rawX, rawY) || 1;
-    const scale = Math.min(1, radius / distance);
-    const x = rawX * scale;
-    const y = rawY * scale;
-
-    touchRef.current.x = x;
-    touchRef.current.y = y;
-
-    if (joystickKnobRef.current) {
-      joystickKnobRef.current.style.transform =
-        `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-    }
-  };
-
-  const handleJoystickUp = (event?: PointerEvent<HTMLDivElement>) => {
-    event?.stopPropagation();
-    event?.preventDefault();
-
-    touchRef.current.active = false;
-    touchRef.current.x = 0;
-    touchRef.current.y = 0;
-
-    if (joystickKnobRef.current) {
-      joystickKnobRef.current.style.transform = "translate(-50%, -50%)";
+    if (event.pointerType !== "mouse") {
+      aim.active = false;
     }
   };
 
@@ -1154,6 +1277,11 @@ export default function ArcadePage() {
     setShotUpgrade("single");
     setUpgradeUntil(0);
     setAmmo(STARTING_AMMO);
+    setBank({ rotate: 0, skew: 0 });
+    pointerRef.current = idlePointerAim();
+    ammoRef.current = STARTING_AMMO;
+    shotUpgradeRef.current = "single";
+    bankRef.current = { rotate: 0, skew: 0 };
   };
 
   const progress = clamp(
@@ -1190,10 +1318,15 @@ export default function ArcadePage() {
             opacity: 0.08;
           }
         }
+
+        .arcade-playfield,
+        .arcade-playfield * {
+          touch-action: none;
+        }
       `}</style>
 
       <main
-      className="min-h-screen bg-[#030508] px-3 py-6 text-white sm:px-6"
+      className="min-h-screen bg-[#030508] px-3 py-3 text-white sm:px-4"
       style={
         {
           "--sector-accent": sector.accent,
@@ -1204,14 +1337,14 @@ export default function ArcadePage() {
       <div
         className="mx-auto w-full overflow-visible"
         style={{
-          transform: `scale(${GAME_SCALE})`,
+          transform: `scale(${gameScale})`,
           transformOrigin: "top center",
-          width: `${100 / GAME_SCALE}%`,
-          marginLeft: `${(100 - 100 / GAME_SCALE) / 2}%`,
+          width: `${100 / gameScale}%`,
+          marginLeft: `${(100 - 100 / gameScale) / 2}%`,
         }}
       >
-        <div className="mx-auto w-full max-w-[1180px]">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="mx-auto w-full max-w-[880px] lg:max-w-[1024px]">
+        <header className="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-2">
           <div>
             <p
               className="font-mono text-[9px] uppercase tracking-[0.35em]"
@@ -1235,14 +1368,9 @@ export default function ArcadePage() {
           }`}
           style={{
             borderColor: `${sector.accent}38`,
-            touchAction: screen === "playing" ? "none" : "auto",
             userSelect: "none",
             WebkitUserSelect: "none",
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
         >
           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
             {visualParticles.map((particle, index) => (
@@ -1301,11 +1429,20 @@ export default function ArcadePage() {
 
               <div
                 ref={viewportRef}
-                className="relative h-[560px] overflow-hidden"
+                className="arcade-playfield relative h-[560px] cursor-crosshair touch-none overflow-hidden"
                 style={{
                   background:
                     `radial-gradient(circle at 55% 50%, ${sector.accentSoft}, transparent 30%), radial-gradient(circle at 20% 75%, ${sector.accent}08, transparent 32%), #020305`,
+                  touchAction: "none",
+                  overscrollBehavior: "none",
                 }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerEnter={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                onPointerLeave={handlePointerLeave}
+                onLostPointerCapture={handleLostPointerCapture}
               >
                 <div
                   className="absolute inset-y-0"
@@ -1503,6 +1640,8 @@ export default function ArcadePage() {
                       top: player.y,
                       width: PLAYER_SIZE,
                       height: PLAYER_SIZE,
+                      transform: `rotate(${bank.rotate}deg) skewX(${bank.skew}deg)`,
+                      transformOrigin: "center center",
                     }}
                   >
                     <div
@@ -1706,81 +1845,8 @@ export default function ArcadePage() {
                   BOSS SIGNAL // {boss.revealed ? "VISIBLE" : "DISTANT"}
                 </div>
 
-                <div className="pointer-events-auto absolute bottom-4 left-4 z-30 sm:hidden">
-                  <div
-                    data-touch-control="true"
-                    className="relative h-[88px] w-[88px] touch-none rounded-full border bg-black/20 opacity-75 backdrop-blur-[2px]"
-                    style={{
-                      borderColor: `${sector.accent}42`,
-                      boxShadow: `inset 0 0 18px ${sector.accent}08`,
-                    }}
-                    role="button"
-                    aria-label="Move Core"
-                    onPointerDown={handleJoystickDown}
-                    onPointerMove={handleJoystickMove}
-                    onPointerUp={handleJoystickUp}
-                    onPointerCancel={handleJoystickUp}
-                  >
-                    <span
-                      className="absolute left-1/2 top-2 h-2 w-px -translate-x-1/2"
-                      style={{ background: `${sector.accent}38` }}
-                    />
-                    <span
-                      className="absolute bottom-2 left-1/2 h-2 w-px -translate-x-1/2"
-                      style={{ background: `${sector.accent}38` }}
-                    />
-                    <span
-                      className="absolute left-2 top-1/2 h-px w-2 -translate-y-1/2"
-                      style={{ background: `${sector.accent}38` }}
-                    />
-                    <span
-                      className="absolute right-2 top-1/2 h-px w-2 -translate-y-1/2"
-                      style={{ background: `${sector.accent}38` }}
-                    />
-                    <div
-                      ref={joystickKnobRef}
-                      className="absolute left-1/2 top-1/2 h-9 w-9 rounded-full border"
-                      style={{
-                        transform: "translate(-50%, -50%)",
-                        borderColor: `${sector.accent}70`,
-                        background: `${sector.accent}10`,
-                        boxShadow: `0 0 14px ${sector.accent}18`,
-                      }}
-                    >
-                      <span
-                        className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                        style={{ background: sector.accent }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pointer-events-none absolute bottom-4 right-4 z-30 sm:hidden">
-                  <button
-                    type="button"
-                    data-touch-control="true"
-                    aria-label="Fire weapon"
-                    onPointerDown={(event) => {
-                      event.stopPropagation();
-                      event.preventDefault();
-                      fire();
-                    }}
-                    onPointerUp={(event) => {
-                      event.stopPropagation();
-                    }}
-                    onPointerCancel={(event) => {
-                      event.stopPropagation();
-                    }}
-                    className="pointer-events-auto flex h-16 w-16 touch-none items-center justify-center rounded-full border bg-black/20 font-mono text-[9px] uppercase tracking-[0.18em] opacity-75 transition active:scale-95"
-                    style={{
-                      borderColor: `${sector.accent}70`,
-                      color: `${sector.accent}cc`,
-                      boxShadow: `0 0 18px ${sector.accent}14`,
-                      backdropFilter: "blur(2px)",
-                    }}
-                  >
-                    FIRE
-                  </button>
+                <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.2em] text-white/30">
+                  Cursor / drag to steer // Auto-fire
                 </div>
               </div>
 
@@ -1807,7 +1873,7 @@ export default function ArcadePage() {
 
           {screen !== "playing" && (
             <div
-              className="relative z-10 flex min-h-[620px] items-center justify-center px-5 py-16 text-center"
+              className="relative z-10 flex min-h-[420px] items-center justify-center px-5 py-8 text-center"
               style={{
                 background: `radial-gradient(circle at center, ${sector.accentSoft}, transparent 38%), #020305`,
               }}
@@ -1950,6 +2016,12 @@ export default function ArcadePage() {
                     "The Spirit lost connection with the Network. Reinitialize the current protocol and try again."}
                 </p>
 
+                {screen === "start" && (
+                  <p className="mx-auto mt-3 max-w-xl font-mono text-[10px] uppercase tracking-[0.18em] text-white/30">
+                    Cursor or finger drag to steer. Weapons auto-fire.
+                  </p>
+                )}
+
                 <div className="mt-10 flex flex-wrap justify-center gap-3">
                   {screen === "start" && (
                     <button
@@ -2089,6 +2161,7 @@ export default function ArcadePage() {
 
         <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-[8px] uppercase tracking-[0.22em] text-white/25">
           <span>AETHERGRID // {sector.code}</span>
+          <span>Steer // cursor or drag // Auto-fire</span>
           <span>
             {screen === "playing"
               ? "CONNECTION // ACTIVE"
