@@ -4,6 +4,9 @@ import type { NftItem, NftRarity } from "@/lib/types";
 const CYBORG_PUNK_STATES_CONTRACT =
   "0x03d29e93692f0cd22d89e59f45b166a40c34b1c1";
 
+const LUNARYA_RECORDED_STATES_CONTRACT =
+  "0x936f35db20399803edd5b57f1d2ea4e6e51b67e9";
+
 const OPEN_SEA_API_URL =
   "https://api.opensea.io/api/v2/chain/ethereum/contract";
 
@@ -104,6 +107,74 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
       .filter((nft) => Boolean(nft.image));
   } catch (error) {
     console.error("[VΣLOHE Archive] Failed to load Cyborg Punk States", error);
+    return [];
+  }
+}
+
+
+function normalizeLunarya(nft: OpenSeaNft): NftItem {
+  const tokenId = nft.identifier;
+  const legacy = getNftById(
+    `VEL-LRS${tokenId === "2" ? "01" : tokenId === "4" ? "02" : tokenId === "6" ? "03" : tokenId === "8" ? "04" : tokenId === "7" ? "05" : tokenId.padStart(2, "0")}`,
+  );
+
+  return {
+    id: legacy?.id ?? `VEL-LRS${tokenId.padStart(2, "0")}`,
+    title: nft.name?.trim() || legacy?.title || `Lunarya Recorded State #${tokenId}`,
+    image: nft.image_url || legacy?.image || "",
+    video: nft.animation_url || legacy?.video,
+    description:
+      nft.description?.trim() ||
+      legacy?.description ||
+      "Live Lunarya Recorded State recorded on Ethereum.",
+    lore:
+      legacy?.lore ||
+      nft.description?.trim() ||
+      "Live Lunarya Recorded State recorded on Ethereum.",
+    series: "Lunarya Recorded States",
+    rarity: rarityFromTraits(nft.traits),
+    marketplace:
+      nft.opensea_url ||
+      `https://opensea.io/item/ethereum/${LUNARYA_RECORDED_STATES_CONTRACT}/${tokenId}`,
+    objkt: legacy?.objkt,
+    status: legacy?.status ?? "Initialization",
+    year: legacy?.year ?? 2052,
+    tags: legacy?.tags ?? ["lunarya", "recorded-state", "ethereum"],
+  };
+}
+
+export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  try {
+    const response = await fetch(
+      `${OPEN_SEA_API_URL}/${LUNARYA_RECORDED_STATES_CONTRACT}/nfts?limit=200`,
+      {
+        headers: {
+          Accept: "application/json",
+          ...(apiKey ? { "X-API-KEY": apiKey } : {}),
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (!response.ok) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea request failed for Lunarya: ${response.status}`,
+      );
+      return [];
+    }
+
+    const payload = (await response.json()) as OpenSeaResponse;
+
+    return (payload.nfts ?? [])
+      .map(normalizeLunarya)
+      .filter((nft) => Boolean(nft.image));
+  } catch (error) {
+    console.error(
+      "[VΣLOHE Archive] Failed to load Lunarya Recorded States",
+      error,
+    );
     return [];
   }
 }
