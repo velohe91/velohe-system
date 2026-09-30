@@ -21,7 +21,8 @@ const client = createPublicClient({
 
 export async function GET() {
   const results = await Promise.all(
-    [1n, 2n, 3n, 4n, 5n].map(async (tokenId) => {
+    [1, 2, 3, 4, 5].map(async (tokenNumber) => {
+      const tokenId = BigInt(tokenNumber);
       try {
         const tokenURI = await client.readContract({
           address: CONTRACT,
