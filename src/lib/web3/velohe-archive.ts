@@ -78,35 +78,61 @@ function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
   };
 }
 
-export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
+let cyborgPunkStatesPromise: Promise<OpenSeaNft[]> | null = null;
+
+async function fetchCyborgPunkStates(): Promise<OpenSeaNft[]> {
   const apiKey = process.env.OPENSEA_API_KEY;
 
-  try {
-    const response = await fetch(
-      `${OPEN_SEA_API_URL}/${CYBORG_PUNK_STATES_CONTRACT}/nfts?limit=200`,
-      {
-        headers: {
-          Accept: "application/json",
-          ...(apiKey ? { "X-API-KEY": apiKey } : {}),
-        },
-        cache: "no-store",
-      },
-    );
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return [];
+  }
 
-    if (!response.ok) {
+  if (!cyborgPunkStatesPromise) {
+    cyborgPunkStatesPromise = (async () => {
+      const response = await fetch(
+        `${OPEN_SEA_API_URL}/${CYBORG_PUNK_STATES_CONTRACT}/nfts?limit=200`,
+        {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `[VΣLOHE Archive] OpenSea API error ${response.status}: ${body}`,
+        );
+        cyborgPunkStatesPromise = null;
+        return [];
+      }
+
+      const payload = (await response.json()) as OpenSeaResponse;
+      return payload.nfts ?? [];
+    })().catch((error) => {
+      cyborgPunkStatesPromise = null;
       console.error(
-        `[VΣLOHE Archive] OpenSea request failed: ${response.status}`,
+        "[VΣLOHE Archive] OpenSea Cyborg Punk States fetch failed:",
+        error,
       );
       return [];
-    }
+    });
+  }
 
-    const payload = (await response.json()) as OpenSeaResponse;
+  return cyborgPunkStatesPromise;
+}
 
-    return (payload.nfts ?? [])
-      .map(normalizeCyborgPunk)
-      .filter((nft) => Boolean(nft.image));
+export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
+  try {
+    const nfts = await fetchCyborgPunkStates();
+    return nfts.map(normalizeCyborgPunk).filter((nft) => Boolean(nft.image));
   } catch (error) {
-    console.error("[VΣLOHE Archive] Failed to load Cyborg Punk States", error);
+    console.error(
+      "[VΣLOHE Archive] Failed to load live Cyborg Punk States:",
+      error,
+    );
     return [];
   }
 }
