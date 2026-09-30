@@ -35,7 +35,7 @@ export function NftCard({ nft, index, onOpen }: Props) {
             loop
             playsInline
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            aria-label={"${nft.title} — video"}
+            aria-label={`${nft.title} — video`}
           />
         ) : (
           /* unoptimized: serve /public paths as-is (avoids optimizer 404/timeouts on large NFT media) */
@@ -47,7 +47,7 @@ export function NftCard({ nft, index, onOpen }: Props) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-        )
+        )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent opacity-80" />
       </div>
 
