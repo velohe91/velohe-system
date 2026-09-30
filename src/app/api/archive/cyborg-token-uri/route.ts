@@ -84,36 +84,51 @@ function resolveIpfsUri(uri: string, tokenId: number) {
   const hexId = tokenId.toString(16).padStart(64, "0");
   const resolved = uri.replace("{id}", hexId);
 
-  if (resolved.startsWith("ipfs://")) {
-    return `https://ipfs.io/ipfs/${resolved.slice("ipfs://".length)}`;
+  if (!resolved.startsWith("ipfs://")) {
+    return [resolved];
   }
 
-  return resolved;
+  const path = resolved.slice("ipfs://".length);
+
+  return [
+    `https://dweb.link/ipfs/${path}`,
+    `https://w3s.link/ipfs/${path}`,
+    `https://ipfs.io/ipfs/${path}`,
+  ];
 }
 
 async function readMetadata(uri: string, tokenId: number) {
-  const url = resolveIpfsUri(uri, tokenId);
+  const urls = resolveIpfsUri(uri, tokenId);
+  const errors: Array<{ url: string; error: string }> = [];
 
-  try {
-    const response = await fetch(url, { cache: "no-store" });
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        errors.push({ url, error: `HTTP ${response.status}` });
+        continue;
+      }
+
       return {
         url,
-        error: `Metadata request failed: ${response.status}`,
+        value: await response.json(),
       };
+    } catch (error) {
+      errors.push({
+        url,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
-
-    return {
-      url,
-      value: await response.json(),
-    };
-  } catch (error) {
-    return {
-      url,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
   }
+
+  return {
+    error: "All IPFS gateways failed",
+    attempts: errors,
+  };
 }
 
 export async function GET() {
