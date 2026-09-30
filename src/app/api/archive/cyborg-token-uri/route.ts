@@ -91,6 +91,10 @@ function resolveIpfsUri(uri: string, tokenId: number) {
   const path = resolved.slice("ipfs://".length);
 
   return [
+    `https://gateway.pinata.cloud/ipfs/${path}`,
+    `https://cloudflare-ipfs.com/ipfs/${path}`,
+    `https://ipfs.filebase.io/ipfs/${path}`,
+    `https://nftstorage.link/ipfs/${path}`,
     `https://dweb.link/ipfs/${path}`,
     `https://w3s.link/ipfs/${path}`,
     `https://ipfs.io/ipfs/${path}`,
