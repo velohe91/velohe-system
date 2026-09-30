@@ -21,4 +21,15 @@ export const archiveCollections: ArchiveCollection[] = [
     media: "/nfts/images/VEL-CBPS001.png",
     contract: "0x03d29e93692f0cd22d89e59f45b166a40c34b1c1",
   },
+  {
+    id: "lunarya-recorded-states",
+    title: "Lunarya Recorded State Node",
+    description:
+      "Live Lunarya Recorded States preserved on Ethereum as foundational VΣLOHE SYSTEM identities.",
+    badge: "ETHEREUM // LIVE",
+    seriesHint: "Lunarya Recorded States · on-chain identities",
+    href: "/gallery/archive/lunarya-recorded-states",
+    media: "/nfts/images/VEL-LRS01.png",
+    contract: "0x936f35db20399803edd5b57f1d2ea4e6e51b67e9",
+  },
 ];
