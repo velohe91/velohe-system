@@ -80,10 +80,55 @@ async function readSafely<T>(read: () => Promise<T>) {
   }
 }
 
+function resolveIpfsUri(uri: string, tokenId: number) {
+  const hexId = tokenId.toString(16).padStart(64, "0");
+  const resolved = uri.replace("{id}", hexId);
+
+  if (resolved.startsWith("ipfs://")) {
+    return `https://ipfs.io/ipfs/${resolved.slice("ipfs://".length)}`;
+  }
+
+  return resolved;
+}
+
+async function readMetadata(uri: string, tokenId: number) {
+  const url = resolveIpfsUri(uri, tokenId);
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+
+    if (!response.ok) {
+      return {
+        url,
+        error: `Metadata request failed: ${response.status}`,
+      };
+    }
+
+    return {
+      url,
+      value: await response.json(),
+    };
+  } catch (error) {
+    return {
+      url,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 export async function GET() {
   const tokenResults = await Promise.all(
     [1, 2, 3, 4, 5].map(async (tokenNumber) => {
       const tokenId = BigInt(tokenNumber);
+
+      const uriResult = await readSafely(() =>
+        client.readContract({
+          address: CONTRACT,
+          abi: ERC1155_METADATA_ABI,
+          functionName: "uri",
+          args: [tokenId],
+        }),
+      );
 
       return {
         tokenId: tokenNumber,
@@ -95,14 +140,11 @@ export async function GET() {
             args: [tokenId],
           }),
         ),
-        uri: await readSafely(() =>
-          client.readContract({
-            address: CONTRACT,
-            abi: ERC1155_METADATA_ABI,
-            functionName: "uri",
-            args: [tokenId],
-          }),
-        ),
+        uri: uriResult,
+        metadata:
+          "value" in uriResult && typeof uriResult.value === "string"
+            ? await readMetadata(uriResult.value, tokenNumber)
+            : { error: "No URI available for metadata resolution" },
       };
     }),
   );
