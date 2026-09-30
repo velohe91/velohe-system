@@ -16,6 +16,7 @@ type OpenSeaNft = {
   description?: string | null;
   image_url?: string | null;
   animation_url?: string | null;
+  original_animation_url?: string | null;
   metadata_url?: string | null;
   opensea_url?: string | null;
   traits?: Array<{ trait_type?: string; value?: string | number | null }>;
@@ -58,7 +59,8 @@ function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
     id: `VEL-CBPS${tokenId.padStart(3, "0")}`,
     title: nft.name?.trim() || legacy?.title || `Cyborg Punk State #${tokenId}`,
     image: nft.image_url || legacy?.image || "",
-    video: nft.animation_url || legacy?.video,
+    video:
+      nft.original_animation_url || nft.animation_url || legacy?.video,
     description:
       nft.description?.trim() ||
       legacy?.description ||
@@ -127,7 +129,7 @@ async function fetchCyborgPunkStates(): Promise<OpenSeaNft[]> {
 export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
   try {
     const nfts = await fetchCyborgPunkStates();
-    return nfts.map(normalizeCyborgPunk).filter((nft) => Boolean(nft.image));
+    return nfts.map(normalizeCyborgPunk).filter((nft) => Boolean(nft.image || nft.video));
   } catch (error) {
     console.error(
       "[VΣLOHE Archive] Failed to load live Cyborg Punk States:",
