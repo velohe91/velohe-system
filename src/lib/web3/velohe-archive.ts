@@ -58,9 +58,8 @@ function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
   return {
     id: `VEL-CBPS${tokenId.padStart(3, "0")}`,
     title: nft.name?.trim() || legacy?.title || `Cyborg Punk State #${tokenId}`,
-    image: nft.image_url || legacy?.image || "",
-    video:
-      nft.original_animation_url || nft.animation_url || legacy?.video,
+    image: nft.image_url || "",
+    video: nft.original_animation_url || nft.animation_url || undefined,
     description:
       nft.description?.trim() ||
       legacy?.description ||
