@@ -177,9 +177,7 @@ const ENEMY_DAMAGE_COOLDOWN = 700;
 
 const VIEWPORT_WIDTH = 1000;
 const UI_TICK_MS = 50;
-const MOBILE_GAME_SCALE = 0.62;
-const DESKTOP_GAME_SCALE = 0.92;
-const DESKTOP_FRAME_QUERY = "(min-width: 1024px)";
+const GAME_SCALE = 0.75;
 
 const BOSS_REVEAL_MARGIN = VIEWPORT_WIDTH * 0.92;
 const BOSS_SHOT_COOLDOWN = 1250;
@@ -235,23 +233,6 @@ function steerToward(current: number, target: number, dt: number): number {
   const step = (target - current) * follow;
   const maxStep = POINTER_MAX_SPEED * dt;
   return current + clamp(step, -maxStep, maxStep);
-}
-
-function useGameScale(): number {
-  const [gameScale, setGameScale] = useState(MOBILE_GAME_SCALE);
-
-  useEffect(() => {
-    const media = window.matchMedia(DESKTOP_FRAME_QUERY);
-    const apply = () => {
-      setGameScale(media.matches ? DESKTOP_GAME_SCALE : MOBILE_GAME_SCALE);
-    };
-
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
-  }, []);
-
-  return gameScale;
 }
 
 function rectsOverlap(
@@ -334,7 +315,6 @@ function makeLifePickups(sectorIndex: number): LifePickup[] {
 }
 
 export default function ArcadePage() {
-  const gameScale = useGameScale();
   const [screen, setScreen] = useState<Screen>("start");
   const [sectorIndex, setSectorIndex] = useState(0);
 
@@ -379,9 +359,7 @@ export default function ArcadePage() {
   const ammoRef = useRef(STARTING_AMMO);
   const shotUpgradeRef = useRef<"single" | "double">("single");
   const bankRef = useRef<CraftBank>({ rotate: 0, skew: 0 });
-  const gameScaleRef = useRef(gameScale);
   screenRef.current = screen;
-  gameScaleRef.current = gameScale;
 
   const lastFireRef = useRef(0);
   const lastBossShotRef = useRef(0);
@@ -590,7 +568,7 @@ export default function ArcadePage() {
           aim.clientY,
           viewportRef.current,
           cameraXRef.current,
-          gameScaleRef.current,
+          GAME_SCALE,
         );
         aim.worldX = world.x;
         aim.worldY = world.y;
@@ -1176,7 +1154,7 @@ export default function ArcadePage() {
       clientY,
       viewport,
       cameraXRef.current,
-      gameScaleRef.current,
+      GAME_SCALE,
     );
     const aim = pointerRef.current;
     aim.clientX = clientX;
@@ -1326,7 +1304,7 @@ export default function ArcadePage() {
       `}</style>
 
       <main
-      className="min-h-screen bg-[#030508] px-3 py-3 text-white sm:px-4"
+      className="min-h-screen bg-[#030508] px-3 py-6 text-white sm:px-6"
       style={
         {
           "--sector-accent": sector.accent,
@@ -1337,14 +1315,14 @@ export default function ArcadePage() {
       <div
         className="mx-auto w-full overflow-visible"
         style={{
-          transform: `scale(${gameScale})`,
+          transform: `scale(${GAME_SCALE})`,
           transformOrigin: "top center",
-          width: `${100 / gameScale}%`,
-          marginLeft: `${(100 - 100 / gameScale) / 2}%`,
+          width: `${100 / GAME_SCALE}%`,
+          marginLeft: `${(100 - 100 / GAME_SCALE) / 2}%`,
         }}
       >
-        <div className="mx-auto w-full max-w-[880px] lg:max-w-[1024px]">
-        <header className="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-2">
+        <div className="mx-auto w-full max-w-[1180px]">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div>
             <p
               className="font-mono text-[9px] uppercase tracking-[0.35em]"
@@ -1873,7 +1851,7 @@ export default function ArcadePage() {
 
           {screen !== "playing" && (
             <div
-              className="relative z-10 flex min-h-[420px] items-center justify-center px-5 py-8 text-center"
+              className="relative z-10 flex min-h-[620px] items-center justify-center px-5 py-16 text-center"
               style={{
                 background: `radial-gradient(circle at center, ${sector.accentSoft}, transparent 38%), #020305`,
               }}
