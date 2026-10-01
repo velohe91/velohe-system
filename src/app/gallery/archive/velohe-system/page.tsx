@@ -27,7 +27,7 @@ export default async function VeloheSystemPage() {
         />
 
         {nfts.length > 0 ? (
-          <NftGrid items={nfts} />
+          <NftGrid items={nfts} mediaAspect="portrait" />
         ) : (
           <div className="rounded-xl border border-neon-cyan/20 bg-panel/70 p-8 text-center hologram-border">
             <p className="font-mono text-sm uppercase tracking-[0.2em] text-muted">
