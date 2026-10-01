@@ -4,10 +4,7 @@ import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
-import {
-  getLiveAethergridSpirits,
-  getLiveVeloheSystem,
-} from "@/lib/web3/velohe-archive";
+import { getOpenSeaCollectionMedia } from "@/lib/web3/velohe-archive";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchiveGalleryPage() {
-  const [aethergridSpirits, veloheSystem] = await Promise.all([
-    getLiveAethergridSpirits(),
-    getLiveVeloheSystem(),
-  ]);
-  const liveAethergridPreview = aethergridSpirits[0];
-  const liveVelohePreview = veloheSystem[0];
+  const collectionMedia = await Promise.all(
+    archiveCollections.map((collection) =>
+      getOpenSeaCollectionMedia(collection.contract),
+    ),
+  );
+
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -43,19 +40,8 @@ export default async function ArchiveGalleryPage() {
               badge={collection.badge}
               seriesHint={collection.seriesHint}
               href={collection.href}
-              media={
-                collection.id === "aethergrid-spirits"
-                  ? liveAethergridPreview?.image || liveAethergridPreview?.video
-                  : collection.id === "velohe-system"
-                    ? liveVelohePreview?.image || liveVelohePreview?.video
-                    : collection.media
-              }
-              mediaType={
-                (collection.id === "aethergrid-spirits" && liveAethergridPreview?.video) ||
-                (collection.id === "velohe-system" && liveVelohePreview?.video)
-                  ? "video"
-                  : "image"
-              }
+              media={collectionMedia[index] || collection.media}
+              mediaType="image"
               index={index}
             />
           ))}

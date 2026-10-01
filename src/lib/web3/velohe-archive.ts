@@ -50,7 +50,7 @@ function rarityFromTraits(traits: OpenSeaNft["traits"]): NftRarity {
 }
 
 function isVideoMedia(url?: string | null): boolean {
-  return Boolean(url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+  return Boolean(url && /.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
 }
 
 function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
@@ -147,7 +147,6 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
   }
 }
 
-
 function getLunaryaStateNumber(nft: OpenSeaNft): string | null {
   const match = nft.name?.match(/Recorded State\s+(\d+)/i);
   const stateNumber = match?.[1];
@@ -219,7 +218,6 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
     }
 
     const payload = (await response.json()) as OpenSeaResponse;
-
     const states = new Map<string, NftItem>();
 
     for (const nft of payload.nfts ?? []) {
@@ -241,7 +239,6 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
     return [];
   }
 }
-
 
 const AETHERGRID_SPIRITS_CONTRACT =
   "0x407ccb1e09eb93525c2a5d12aeb1a46da135d737";
@@ -347,6 +344,85 @@ export async function getLiveAethergridSpirits(): Promise<NftItem[]> {
   }
 }
 
+type OpenSeaContractResponse = {
+  collection?: string | null;
+};
+
+type OpenSeaCollectionResponse = {
+  image_url?: string | null;
+  banner_image_url?: string | null;
+};
+
+export async function getOpenSeaCollectionMedia(
+  contract: string,
+): Promise<string | null> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return null;
+  }
+
+  try {
+    const headers = {
+      Accept: "application/json",
+      "X-API-KEY": apiKey,
+    };
+
+    const contractResponse = await fetch(
+      `https://api.opensea.io/api/v2/chain/ethereum/contract/${contract}`,
+      {
+        headers,
+        cache: "no-store",
+      },
+    );
+
+    if (!contractResponse.ok) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea contract metadata failed for ${contract}: ${contractResponse.status}`,
+      );
+      return null;
+    }
+
+    const contractData =
+      (await contractResponse.json()) as OpenSeaContractResponse;
+
+    const slug = contractData.collection;
+
+    if (!slug) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea collection slug missing for ${contract}`,
+      );
+      return null;
+    }
+
+    const collectionResponse = await fetch(
+      `https://api.opensea.io/api/v2/collections/${slug}`,
+      {
+        headers,
+        cache: "no-store",
+      },
+    );
+
+    if (!collectionResponse.ok) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea collection metadata failed for ${slug}: ${collectionResponse.status}`,
+      );
+      return null;
+    }
+
+    const collectionData =
+      (await collectionResponse.json()) as OpenSeaCollectionResponse;
+
+    return collectionData.banner_image_url || collectionData.image_url || null;
+  } catch (error) {
+    console.error(
+      `[VΣLOHE Archive] Failed to load OpenSea collection media for ${contract}`,
+      error,
+    );
+    return null;
+  }
+}
 
 const VELOHE_SYSTEM_CONTRACT =
   "0xd9ca0acaa8ff27f75965d52e56dd9e9c5b6c9c6c";
