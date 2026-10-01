@@ -50,7 +50,21 @@ function rarityFromTraits(traits: OpenSeaNft["traits"]): NftRarity {
 }
 
 function isVideoMedia(url?: string | null): boolean {
-  return Boolean(url && /.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+  return Boolean(url && /\\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+}
+
+function extractVideoUrlFromOpenSeaPage(html: string): string | null {
+  const matches = html.match(
+    /https?:\\/\\/[^"'<\\s\\\\]+\\.(?:mp4|webm)(?:\\?[^"'<\\s\\\\]*)?/gi,
+  );
+
+  if (!matches?.length) {
+    return null;
+  }
+
+  return matches
+    .map((url) => url.replace(/\\u0026/g, "&"))
+    .find((url) => isVideoMedia(url)) || null;
 }
 
 function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
@@ -419,17 +433,52 @@ export async function getOpenSeaCollectionMedia(
     const collectionData =
       (await collectionResponse.json()) as OpenSeaCollectionResponse;
 
+    if (collectionData.banner_image_url && isVideoMedia(collectionData.banner_image_url)) {
+      return {
+        url: collectionData.banner_image_url,
+        type: "video",
+      };
+    }
+
+    try {
+      const overviewResponse = await fetch(
+        `https://opensea.io/collection/${slug}/overview`,
+        {
+          headers: {
+            Accept: "text/html",
+            "User-Agent": "Mozilla/5.0 VΣLOHE SYSTEM Archive",
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (overviewResponse.ok) {
+        const html = await overviewResponse.text();
+        const videoUrl = extractVideoUrlFromOpenSeaPage(html);
+
+        if (videoUrl) {
+          return {
+            url: videoUrl,
+            type: "video",
+          };
+        }
+      }
+    } catch (error) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea hero video lookup failed for ${slug}`,
+        error,
+      );
+    }
+
     const mediaUrl =
       collectionData.banner_image_url || collectionData.image_url || null;
 
-    if (!mediaUrl) {
-      return null;
-    }
-
-    return {
-      url: mediaUrl,
-      type: isVideoMedia(mediaUrl) ? "video" : "image",
-    };
+    return mediaUrl
+      ? {
+          url: mediaUrl,
+          type: "image",
+        }
+      : null;
   } catch (error) {
     console.error(
       `[VΣLOHE Archive] Failed to load OpenSea collection media for ${contract}`,
