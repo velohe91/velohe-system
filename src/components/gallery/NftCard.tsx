@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { NftItem } from "@/lib/types";
 import { RARITY_COLORS } from "@/lib/constants";
@@ -21,6 +21,15 @@ export function NftCard({
 }: Props) {
   const rarityClass = RARITY_COLORS[nft.rarity] ?? RARITY_COLORS.common;
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
   const staticImage =
@@ -59,7 +68,7 @@ export function NftCard({
           priority={index < 4}
         />
 
-        {nft.video && isHovered && (
+        {nft.video && (showMobileVideo || showDesktopVideo) && (
           <video
             key={nft.video}
             src={nft.video}
@@ -69,7 +78,7 @@ export function NftCard({
             playsInline
             preload="metadata"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            aria-label={`${nft.title} — hover preview`}
+            aria-label={`${nft.title} — preview`}
           />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent opacity-80" />
