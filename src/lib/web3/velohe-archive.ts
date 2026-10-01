@@ -353,9 +353,14 @@ type OpenSeaCollectionResponse = {
   banner_image_url?: string | null;
 };
 
+export type OpenSeaCollectionMedia = {
+  url: string;
+  type: "image" | "video";
+};
+
 export async function getOpenSeaCollectionMedia(
   contract: string,
-): Promise<string | null> {
+): Promise<OpenSeaCollectionMedia | null> {
   const apiKey = process.env.OPENSEA_API_KEY;
 
   if (!apiKey) {
@@ -414,7 +419,17 @@ export async function getOpenSeaCollectionMedia(
     const collectionData =
       (await collectionResponse.json()) as OpenSeaCollectionResponse;
 
-    return collectionData.banner_image_url || collectionData.image_url || null;
+    const mediaUrl =
+      collectionData.banner_image_url || collectionData.image_url || null;
+
+    if (!mediaUrl) {
+      return null;
+    }
+
+    return {
+      url: mediaUrl,
+      type: isVideoMedia(mediaUrl) ? "video" : "image",
+    };
   } catch (error) {
     console.error(
       `[VΣLOHE Archive] Failed to load OpenSea collection media for ${contract}`,

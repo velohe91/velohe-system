@@ -40,8 +40,8 @@ export default async function ArchiveGalleryPage() {
               badge={collection.badge}
               seriesHint={collection.seriesHint}
               href={collection.href}
-              media={collectionMedia[index] || collection.media}
-              mediaType="image"
+              media={collectionMedia[index]?.url || collection.media}
+              mediaType={collectionMedia[index]?.type || "image"}
               index={index}
             />
           ))}
