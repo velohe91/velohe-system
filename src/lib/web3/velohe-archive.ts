@@ -241,3 +241,108 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
     return [];
   }
 }
+
+
+const AETHERGRID_SPIRITS_CONTRACT =
+  "0x407ccb1e09eb93525c2a5d12aeb1a46da135d737";
+
+function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
+  const tokenId = nft.identifier;
+  const imageUrl = nft.image_url || "";
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
+
+  return {
+    id: `VEL-AGS${tokenId.padStart(3, "0")}`,
+    title:
+      nft.name?.trim() ||
+      `The Aethergrid Spirits #${tokenId}`,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
+    description:
+      nft.description?.trim() ||
+      "Live Aethergrid Spirit recorded on Ethereum.",
+    lore:
+      nft.description?.trim() ||
+      "Live Aethergrid Spirit recorded on Ethereum.",
+    series: "The Aethergrid Spirits",
+    rarity: rarityFromTraits(nft.traits),
+    marketplace:
+      nft.opensea_url ||
+      `https://opensea.io/item/ethereum/${AETHERGRID_SPIRITS_CONTRACT}/${tokenId}`,
+    status: "Archived",
+    tags: ["aethergrid", "spirit", "ethereum"],
+  };
+}
+
+let aethergridSpiritsPromise: Promise<OpenSeaNft[]> | null = null;
+
+async function fetchAethergridSpirits(): Promise<OpenSeaNft[]> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return [];
+  }
+
+  if (!aethergridSpiritsPromise) {
+    aethergridSpiritsPromise = (async () => {
+      const response = await fetch(
+        `${OPEN_SEA_API_URL}/${AETHERGRID_SPIRITS_CONTRACT}/nfts?limit=200`,
+        {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `[VΣLOHE Archive] OpenSea Aethergrid Spirits error ${response.status}: ${body}`,
+        );
+        aethergridSpiritsPromise = null;
+        return [];
+      }
+
+      const payload = (await response.json()) as OpenSeaResponse;
+      return payload.nfts ?? [];
+    })().catch((error) => {
+      aethergridSpiritsPromise = null;
+      console.error(
+        "[VΣLOHE Archive] OpenSea Aethergrid Spirits fetch failed:",
+        error,
+      );
+      return [];
+    });
+  }
+
+  return aethergridSpiritsPromise;
+}
+
+export async function getLiveAethergridSpirits(): Promise<NftItem[]> {
+  try {
+    const nfts = await fetchAethergridSpirits();
+    const spirits = new Map<string, NftItem>();
+
+    for (const nft of nfts) {
+      const normalized = normalizeAethergridSpirit(nft);
+
+      if (normalized.image || normalized.video) {
+        spirits.set(normalized.id, normalized);
+      }
+    }
+
+    return [...spirits.values()].sort(
+      (a, b) => nftIdNumber(a.id) - nftIdNumber(b.id),
+    );
+  } catch (error) {
+    console.error(
+      "[VΣLOHE Archive] Failed to load The Aethergrid Spirits",
+      error,
+    );
+    return [];
+  }
+}
