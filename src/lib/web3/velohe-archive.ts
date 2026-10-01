@@ -50,12 +50,12 @@ function rarityFromTraits(traits: OpenSeaNft["traits"]): NftRarity {
 }
 
 function isVideoMedia(url?: string | null): boolean {
-  return Boolean(url && /\\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+  return Boolean(url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
 }
 
 function extractVideoUrlFromOpenSeaPage(html: string): string | null {
   const matches = html.match(
-    /https?:\\/\\/[^"'<\\s\\\\]+\\.(?:mp4|webm)(?:\\?[^"'<\\s\\\\]*)?/gi,
+    /https?:\/\/[^"'<\s\\]+\.(?:mp4|webm)(?:\?[^"'<\s\\]*)?/gi,
   );
 
   if (!matches?.length) {
