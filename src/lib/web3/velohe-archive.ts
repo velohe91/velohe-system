@@ -53,6 +53,20 @@ function isVideoMedia(url?: string | null): boolean {
   return Boolean(url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
 }
 
+function extractVideoUrlFromOpenSeaPage(html: string): string | null {
+  const matches = html.match(
+    /https?:\/\/[^"'<\s\\]+\.(?:mp4|webm)(?:\?[^"'<\s\\]*)?/gi,
+  );
+
+  if (!matches?.length) {
+    return null;
+  }
+
+  return matches
+    .map((url) => url.replace(/\\u0026/g, "&"))
+    .find((url) => isVideoMedia(url)) || null;
+}
+
 function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
   const tokenId = nft.identifier;
   const legacy = getNftById(
@@ -147,7 +161,6 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
   }
 }
 
-
 function getLunaryaStateNumber(nft: OpenSeaNft): string | null {
   const match = nft.name?.match(/Recorded State\s+(\d+)/i);
   const stateNumber = match?.[1];
@@ -219,7 +232,6 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
     }
 
     const payload = (await response.json()) as OpenSeaResponse;
-
     const states = new Map<string, NftItem>();
 
     for (const nft of payload.nfts ?? []) {
@@ -236,6 +248,340 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
   } catch (error) {
     console.error(
       "[VΣLOHE Archive] Failed to load Lunarya Recorded States",
+      error,
+    );
+    return [];
+  }
+}
+
+const AETHERGRID_SPIRITS_CONTRACT =
+  "0x407ccb1e09eb93525c2a5d12aeb1a46da135d737";
+
+function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
+  const tokenId = nft.identifier;
+  const imageUrl = nft.image_url || "";
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
+
+  return {
+    id: `VEL-AGS${tokenId.padStart(3, "0")}`,
+    title:
+      nft.name?.trim() ||
+      `The Aethergrid Spirits #${tokenId}`,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
+    description:
+      nft.description?.trim() ||
+      "Live Aethergrid Spirit recorded on Ethereum.",
+    lore:
+      nft.description?.trim() ||
+      "Live Aethergrid Spirit recorded on Ethereum.",
+    series: "The Aethergrid Spirits",
+    rarity: rarityFromTraits(nft.traits),
+    marketplace:
+      nft.opensea_url ||
+      `https://opensea.io/item/ethereum/${AETHERGRID_SPIRITS_CONTRACT}/${tokenId}`,
+    status: "Archived",
+    tags: ["aethergrid", "spirit", "ethereum"],
+  };
+}
+
+let aethergridSpiritsPromise: Promise<OpenSeaNft[]> | null = null;
+
+async function fetchAethergridSpirits(): Promise<OpenSeaNft[]> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return [];
+  }
+
+  if (!aethergridSpiritsPromise) {
+    aethergridSpiritsPromise = (async () => {
+      const response = await fetch(
+        `${OPEN_SEA_API_URL}/${AETHERGRID_SPIRITS_CONTRACT}/nfts?limit=200`,
+        {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `[VΣLOHE Archive] OpenSea Aethergrid Spirits error ${response.status}: ${body}`,
+        );
+        aethergridSpiritsPromise = null;
+        return [];
+      }
+
+      const payload = (await response.json()) as OpenSeaResponse;
+      return payload.nfts ?? [];
+    })().catch((error) => {
+      aethergridSpiritsPromise = null;
+      console.error(
+        "[VΣLOHE Archive] OpenSea Aethergrid Spirits fetch failed:",
+        error,
+      );
+      return [];
+    });
+  }
+
+  return aethergridSpiritsPromise;
+}
+
+export async function getLiveAethergridSpirits(): Promise<NftItem[]> {
+  try {
+    const nfts = await fetchAethergridSpirits();
+    const spirits = new Map<string, NftItem>();
+
+    for (const nft of nfts) {
+      const normalized = normalizeAethergridSpirit(nft);
+
+      if (normalized.image || normalized.video) {
+        spirits.set(normalized.id, normalized);
+      }
+    }
+
+    return [...spirits.values()].sort(
+      (a, b) => nftIdNumber(a.id) - nftIdNumber(b.id),
+    );
+  } catch (error) {
+    console.error(
+      "[VΣLOHE Archive] Failed to load The Aethergrid Spirits",
+      error,
+    );
+    return [];
+  }
+}
+
+type OpenSeaContractResponse = {
+  collection?: string | null;
+};
+
+type OpenSeaCollectionResponse = {
+  image_url?: string | null;
+  banner_image_url?: string | null;
+};
+
+export type OpenSeaCollectionMedia = {
+  url: string;
+  type: "image" | "video";
+};
+
+export async function getOpenSeaCollectionMedia(
+  contract: string,
+): Promise<OpenSeaCollectionMedia | null> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return null;
+  }
+
+  try {
+    const headers = {
+      Accept: "application/json",
+      "X-API-KEY": apiKey,
+    };
+
+    const contractResponse = await fetch(
+      `https://api.opensea.io/api/v2/chain/ethereum/contract/${contract}`,
+      {
+        headers,
+        cache: "no-store",
+      },
+    );
+
+    if (!contractResponse.ok) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea contract metadata failed for ${contract}: ${contractResponse.status}`,
+      );
+      return null;
+    }
+
+    const contractData =
+      (await contractResponse.json()) as OpenSeaContractResponse;
+
+    const slug = contractData.collection;
+
+    if (!slug) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea collection slug missing for ${contract}`,
+      );
+      return null;
+    }
+
+    const collectionResponse = await fetch(
+      `https://api.opensea.io/api/v2/collections/${slug}`,
+      {
+        headers,
+        cache: "no-store",
+      },
+    );
+
+    if (!collectionResponse.ok) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea collection metadata failed for ${slug}: ${collectionResponse.status}`,
+      );
+      return null;
+    }
+
+    const collectionData =
+      (await collectionResponse.json()) as OpenSeaCollectionResponse;
+
+    if (collectionData.banner_image_url && isVideoMedia(collectionData.banner_image_url)) {
+      return {
+        url: collectionData.banner_image_url,
+        type: "video",
+      };
+    }
+
+    try {
+      const overviewResponse = await fetch(
+        `https://opensea.io/collection/${slug}/overview`,
+        {
+          headers: {
+            Accept: "text/html",
+            "User-Agent": "Mozilla/5.0 VΣLOHE SYSTEM Archive",
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (overviewResponse.ok) {
+        const html = await overviewResponse.text();
+        const videoUrl = extractVideoUrlFromOpenSeaPage(html);
+
+        if (videoUrl) {
+          return {
+            url: videoUrl,
+            type: "video",
+          };
+        }
+      }
+    } catch (error) {
+      console.error(
+        `[VΣLOHE Archive] OpenSea hero video lookup failed for ${slug}`,
+        error,
+      );
+    }
+
+    const mediaUrl =
+      collectionData.banner_image_url || collectionData.image_url || null;
+
+    return mediaUrl
+      ? {
+          url: mediaUrl,
+          type: "image",
+        }
+      : null;
+  } catch (error) {
+    console.error(
+      `[VΣLOHE Archive] Failed to load OpenSea collection media for ${contract}`,
+      error,
+    );
+    return null;
+  }
+}
+
+const VELOHE_SYSTEM_CONTRACT =
+  "0xd9ca0acaa8ff27f75965d52e56dd9e9c5b6c9c6c";
+
+function normalizeVeloheSystem(nft: OpenSeaNft): NftItem {
+  const tokenId = nft.identifier;
+  const imageUrl = nft.image_url || "";
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
+
+  return {
+    id: `VEL-VSYS${tokenId.padStart(3, "0")}`,
+    title: nft.name?.trim() || `VELOHE SYSTEM #${tokenId}`,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
+    description:
+      nft.description?.trim() ||
+      "Live VELOHE SYSTEM identity recorded on Ethereum.",
+    lore:
+      nft.description?.trim() ||
+      "Live VELOHE SYSTEM identity recorded on Ethereum.",
+    series: "VELOHE SYSTEM",
+    rarity: rarityFromTraits(nft.traits),
+    marketplace:
+      nft.opensea_url ||
+      `https://opensea.io/item/ethereum/${VELOHE_SYSTEM_CONTRACT}/${tokenId}`,
+    status: "Archived",
+    tags: ["velohe-system", "ethereum"],
+  };
+}
+
+let veloheSystemPromise: Promise<OpenSeaNft[]> | null = null;
+
+async function fetchVeloheSystem(): Promise<OpenSeaNft[]> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return [];
+  }
+
+  if (!veloheSystemPromise) {
+    veloheSystemPromise = (async () => {
+      const response = await fetch(
+        `${OPEN_SEA_API_URL}/${VELOHE_SYSTEM_CONTRACT}/nfts?limit=200`,
+        {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `[VΣLOHE Archive] OpenSea VELOHE SYSTEM error ${response.status}: ${body}`,
+        );
+        veloheSystemPromise = null;
+        return [];
+      }
+
+      const payload = (await response.json()) as OpenSeaResponse;
+      return payload.nfts ?? [];
+    })().catch((error) => {
+      veloheSystemPromise = null;
+      console.error(
+        "[VΣLOHE Archive] OpenSea VELOHE SYSTEM fetch failed:",
+        error,
+      );
+      return [];
+    });
+  }
+
+  return veloheSystemPromise;
+}
+
+export async function getLiveVeloheSystem(): Promise<NftItem[]> {
+  try {
+    const nfts = await fetchVeloheSystem();
+    const items = new Map<string, NftItem>();
+
+    for (const nft of nfts) {
+      const normalized = normalizeVeloheSystem(nft);
+
+      if (normalized.image || normalized.video) {
+        items.set(normalized.id, normalized);
+      }
+    }
+
+    return [...items.values()];
+  } catch (error) {
+    console.error(
+      "[VΣLOHE Archive] Failed to load VELOHE SYSTEM",
       error,
     );
     return [];

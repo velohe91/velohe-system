@@ -9,10 +9,18 @@ type Props = {
   nft: NftItem;
   index: number;
   onOpen: (nft: NftItem) => void;
+  mediaAspect?: "square" | "portrait";
 };
 
-export function NftCard({ nft, index, onOpen }: Props) {
+export function NftCard({
+  nft,
+  index,
+  onOpen,
+  mediaAspect = "square",
+}: Props) {
   const rarityClass = RARITY_COLORS[nft.rarity] ?? RARITY_COLORS.common;
+  const mediaAspectClass =
+    mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
 
   return (
     <motion.button
@@ -25,7 +33,9 @@ export function NftCard({ nft, index, onOpen }: Props) {
       transition={{ delay: Math.min(index * 0.06, 0.4), duration: 0.4 }}
       whileHover={{ y: -4 }}
     >
-      <div className="relative aspect-square overflow-hidden bg-void cyber-grid">
+      <div
+        className={`relative ${mediaAspectClass} overflow-hidden bg-void cyber-grid`}
+      >
         {nft.video ? (
           <video
             src={nft.video}

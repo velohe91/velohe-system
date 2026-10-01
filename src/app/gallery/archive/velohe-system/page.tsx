@@ -3,18 +3,18 @@ import { NftGrid } from "@/components/gallery/NftGrid";
 import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { getLiveLunaryaRecordedStates } from "@/lib/web3/velohe-archive";
+import { getLiveVeloheSystem } from "@/lib/web3/velohe-archive";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Lunarya Recorded State Node",
+  title: "VELOHE SYSTEM Node",
   description:
-    "Live Lunarya Recorded States preserved within the VΣLOHE SYSTEM Archive.",
+    "Live VELOHE SYSTEM identities preserved within the VΣLOHE SYSTEM Archive.",
 };
 
-export default async function LunaryaRecordedStatesPage() {
-  const nfts = await getLiveLunaryaRecordedStates();
+export default async function VeloheSystemPage() {
+  const nfts = await getLiveVeloheSystem();
 
   return (
     <PageTransition>
@@ -22,16 +22,16 @@ export default async function LunaryaRecordedStatesPage() {
         <GalleryBackLink href="/gallery/archive" label="Archive" />
         <SectionHeading
           eyebrow="Archive // Collection Node"
-          title="Lunarya Recorded State Node"
-          subtitle="Live Lunarya Recorded States preserved through their Ethereum on-chain records."
+          title="VELOHE SYSTEM Node"
+          subtitle="Live VELOHE SYSTEM identities preserved through their Ethereum on-chain records."
         />
 
         {nfts.length > 0 ? (
-          <NftGrid items={nfts} />
+          <NftGrid items={nfts} mediaAspect="portrait" />
         ) : (
           <div className="rounded-xl border border-neon-cyan/20 bg-panel/70 p-8 text-center hologram-border">
             <p className="font-mono text-sm uppercase tracking-[0.2em] text-muted">
-              No live states available
+              No live VELOHE SYSTEM identities available
             </p>
           </div>
         )}

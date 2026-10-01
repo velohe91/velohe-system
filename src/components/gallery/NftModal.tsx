@@ -10,6 +10,7 @@ import { RARITY_COLORS } from "@/lib/constants";
 type Props = {
   nft: NftItem | null;
   onClose: () => void;
+  mediaAspect?: "square" | "portrait";
 };
 
 type MediaMode = "still" | "motion";
@@ -32,7 +33,11 @@ function getMotionKind(src?: string): "gif" | "video" | null {
  * - `video` (.gif) = animated loop via <img>
  * - `video` (.mp4/…) = HTML5 video with image as poster
  */
-export function NftModal({ nft, onClose }: Props) {
+export function NftModal({
+  nft,
+  onClose,
+  mediaAspect = "square",
+}: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -81,6 +86,8 @@ export function NftModal({ nft, onClose }: Props) {
     : "";
   const motionKind = nft ? getMotionKind(nft.video) : null;
   const showMotion = Boolean(nft?.video) && mediaMode === "motion";
+  const mediaAspectClass =
+    mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
 
   return createPortal(
     <AnimatePresence>
@@ -115,7 +122,9 @@ export function NftModal({ nft, onClose }: Props) {
           >
             <div className="grid min-h-0 gap-0 md:grid-cols-2">
               {/* Media: still (image) + optional motion (gif / mp4) */}
-              <div className="relative aspect-square shrink-0 bg-void cyber-grid md:min-h-[320px]">
+              <div
+                className={`relative ${mediaAspectClass} shrink-0 bg-void cyber-grid md:min-h-[320px]`}
+              >
                 {showMotion && motionKind === "gif" && nft.video ? (
                   // GIF must use <img> — <video> cannot play animated GIFs
                   // eslint-disable-next-line @next/next/no-img-element

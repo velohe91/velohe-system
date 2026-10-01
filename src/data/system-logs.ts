@@ -1,10 +1,10 @@
 /**
  * Short terminal-style system logs.
- * Live ≈ LOG-VΣ## · Archive ≈ LOG-001–009
+ * Archive includes LOG-VΣ## and LOG-001–009
  * Merged/sorted in data/feed.ts.
  *
  * HOW TO ADD A LOG:
- * 1. Push a new object with kind: "system-log" and era: "live" | "archive"
+ * 1. Push a new object with kind: "system-log" and era: "archive" | "archive"
  * 2. Use a unique `id` and a display `timestamp`
  * 3. Keep `message` short (one or two lines)
  * 4. Optionally set `title` / `relatedNftId` / `blogLink`
@@ -13,11 +13,11 @@
 import type { SystemLogEntry } from "@/lib/types";
 
 export const systemLogs: SystemLogEntry[] = [
-  // ─── Live (LOG-VΣ##) — sorted newest-first in feed.ts ───
+  // ─── Archived live logs (LOG-VΣ##) — sorted newest-first in feed.ts ───
 
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ07",
     timestamp: "2026.08.26",
     level: "SIGNAL",
@@ -40,7 +40,7 @@ The asset has been successfully integrated into the VΣLOHE exhibition system. O
   },
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ06",
     timestamp: "2026.08.26",
     level: "SIGNAL",
@@ -63,7 +63,7 @@ The asset has been successfully integrated into the VΣLOHE exhibition system. O
   },
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ05",
     timestamp: "2026.08.12",
     level: "SIGNAL",
@@ -89,7 +89,7 @@ The asset has been successfully integrated into the VΣLOHE exhibition system. O
 
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ04",
     timestamp: "2026.08.08",
     level: "SIGNAL",
@@ -110,7 +110,7 @@ The asset has been successfully integrated into the VΣLOHE exhibition system. O
   },
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ03",
     timestamp: "2026.08.04",
     level: "SIGNAL",
@@ -140,7 +140,7 @@ Signal integrity: STABLE.`,
   },
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ02",
     timestamp: "2026.08.03_02:22",
     level: "SIGNAL",
@@ -170,7 +170,7 @@ Open the Collection link below for the external protocol overview.`,
   },
   {
     kind: "system-log",
-    era: "live",
+    era: "archive",
     id: "LOG-VΣ01",
     timestamp: "2026.07.22_19:32",
     level: "SIGNAL",

@@ -5,13 +5,15 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "VΣLOHE SYSTEM Archive",
   description:
     "The foundational identities of VΣLOHE SYSTEM, preserved through their on-chain records.",
 };
 
-export default function ArchiveGalleryPage() {
+export default async function ArchiveGalleryPage() {
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -32,6 +34,7 @@ export default function ArchiveGalleryPage() {
               seriesHint={collection.seriesHint}
               href={collection.href}
               media={collection.media}
+              mediaType={collection.mediaType}
               index={index}
             />
           ))}

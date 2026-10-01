@@ -7,8 +7,8 @@ const ERAS: {
   label: string;
   hint: string;
 }[] = [
-  { id: "live", label: "Live Feed", hint: "BC · TX-VΣ · LOG-VΣ" },
-  { id: "archive", label: "Archives", hint: "Sealed · TX/LOG 001–009" },
+  { id: "live", label: "Live Feed", hint: "BC · TX-VΣ" },
+  { id: "archive", label: "Archives", hint: "Sealed · LOG-VΣ · TX/LOG 001–009" },
 ];
 
 export function EraTabs({

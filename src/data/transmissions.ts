@@ -14,7 +14,53 @@ import type { TransmissionArticle } from "@/lib/types";
 
 export const transmissionArticles: TransmissionArticle[] = [
   // ─── Live (TX-VΣ##) — sorted newest-first in feed.ts ───
-{
+  {
+    kind: "transmission",
+    era: "live",
+    id: "TX-VΣ05",
+    date: "2026.10.01_22:00",
+    title: "ARCADE PROTOCOL — SCORE LAYER INITIALIZED",
+    tags: ["arcade", "game", "score", "nft", "web3"],
+    content: `The ARCADE layer is now active within VΣLOHE SYSTEM.
+
+The game is still under development, but its purpose is already defined: play, accumulate score, and turn performance into access.
+
+Arcade score will be designed as a future reward mechanism for obtaining NFTs within the VΣLOHE ecosystem.
+
+The system is not ready to issue those rewards yet. The score economy, reward rules, and NFT integration remain under development.
+
+For now, the objective is simple:
+
+PLAY.
+SCORE.
+CLIMB.
+
+Your score will matter when the ARCADE reward layer goes live.
+
+ARCADE PROTOCOL: IN DEVELOPMENT.
+SCORE UTILITY: NFT REWARD LAYER PLANNED.
+REWARD INTEGRATION: PENDING.`,
+  },
+  {
+    kind: "transmission",
+    era: "live",
+    id: "TX-VΣ04",
+    date: "2026.10.01_21:30",
+    title: "LIVE NFT ARCHIVE — ON-CHAIN RECORDS CONNECTED",
+    tags: ["live nft", "archive", "ethereum", "on-chain", "web3"],
+    content: `The VΣLOHE SYSTEM Archive has entered a new state.
+
+Live NFT collections are now being connected to their on-chain records and displayed directly through the system archive.
+
+The archive is no longer only a catalog of preserved identities. It now reads live collection data and presents those identities as active system records.
+
+Collection nodes are online. NFT records are being synchronized. The archive layer is live.
+
+LIVE NFT ARCHIVE: ACTIVE.
+ON-CHAIN RECORDS: CONNECTED.
+COLLECTION NODES: ONLINE.`,
+  },
+  {
     kind: "transmission",
     era: "live",
     id: "TX-VΣ03",
@@ -48,9 +94,9 @@ LIVE SYNCHRONIZATION: 45s.
 
 The connection is stable.
 
-Awaiting further signals from the network.`
+Awaiting further signals from the network.`,
   },
-{
+  {
     kind: "transmission",
     era: "live",
     id: "TX-VΣ02",
@@ -61,9 +107,8 @@ Awaiting further signals from the network.`
 
 But Lunarya was always one step ahead. Her fingers flew across the holographic keyboard, isolating her private network from the government's mainframe. On the main screen, an encrypted folder opened, harmlessly classified under the name: CyborgPunks Club. To the State's auditors, these files were nothing more than a bizarre collection of digital art—pixelated avatars, urban aesthetics, and vibrant colors. Digital trash.
 
-What the censors didn't know was that every pixel, color palette, and geometric stroke concealed terabytes of genetic code and biomechanical assembly schematics. The CyborgPunks weren't just art; they were a dormant army.  A red alert flashed on the screen. The government forces had begun their assault on the east sector. It was now or never. Lunarya knew that conventional channels would be intercepted in seconds by government algorithms. She needed an immutable path. A network that belonged to no one, and therefore, no one could shut down. She invoked the protocols of the old decentralized web, hiding the ignition sequences within smart contracts on the Ethereum and Tezos blockchains.`,
+What the censors didn't know was that every pixel, color palette, and geometric stroke concealed terabytes of genetic code and biomechanical assembly schematics. The CyborgPunks weren't just art; they were a dormant army. A red alert flashed on the screen. The government forces had begun their assault on the east sector. It was now or never. Lunarya knew that conventional channels would be intercepted in seconds by government algorithms. She needed an immutable path. A network that belonged to no one, and therefore, no one could shut down. She invoked the protocols of the old decentralized web, hiding the ignition sequences within smart contracts on the Ethereum and Tezos blockchains.`,
   },
-  
   {
     kind: "transmission",
     era: "live",
