@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import { NftGrid } from "@/components/gallery/NftGrid";
+import { ArchiveCollectionCard } from "@/components/gallery/ArchiveCollectionCard";
 import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { nfts } from "@/data/nfts";
+import { archiveCollections } from "@/data/archive-collections";
 
 export const metadata: Metadata = {
   title: "VΣLOHE SYSTEM Archive",
   description:
-    "Official recorded identities and lore — CyborgPunks · VΣLOHE SYSTEM · Lunarya.",
+    "The foundational identities of VΣLOHE SYSTEM, preserved through their on-chain records.",
 };
 
-/**
- * Primary archive catalog (existing NFT grid).
- */
 export default function ArchiveGalleryPage() {
   return (
     <PageTransition>
@@ -24,7 +21,21 @@ export default function ArchiveGalleryPage() {
           title="VΣLOHE SYSTEM Archive"
           subtitle="The foundational identities of VΣLOHE SYSTEM, preserved through their on-chain records."
         />
-        <NftGrid items={nfts} />
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {archiveCollections.map((collection, index) => (
+            <ArchiveCollectionCard
+              key={collection.id}
+              title={collection.title}
+              description={collection.description}
+              badge={collection.badge}
+              seriesHint={collection.seriesHint}
+              href={collection.href}
+              media={collection.media}
+              index={index}
+            />
+          ))}
+        </div>
       </div>
     </PageTransition>
   );
