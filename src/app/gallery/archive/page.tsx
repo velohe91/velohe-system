@@ -4,7 +4,6 @@ import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
-import { getOpenSeaCollectionMedia } from "@/lib/web3/velohe-archive";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +14,6 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchiveGalleryPage() {
-  const collectionMedia = await Promise.all(
-    archiveCollections.map((collection) =>
-      getOpenSeaCollectionMedia(collection.contract),
-    ),
-  );
-
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -40,8 +33,8 @@ export default async function ArchiveGalleryPage() {
               badge={collection.badge}
               seriesHint={collection.seriesHint}
               href={collection.href}
-              media={collectionMedia[index]?.url || collection.media}
-              mediaType={collectionMedia[index]?.type || "image"}
+              media={collection.media}
+              mediaType={collection.mediaType}
               index={index}
             />
           ))}
