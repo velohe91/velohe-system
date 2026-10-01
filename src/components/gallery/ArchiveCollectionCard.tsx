@@ -11,7 +11,8 @@ type Props = {
   badge: string;
   seriesHint: string;
   href: string;
-  media: string;
+  media?: string;
+  mediaType?: "image" | "video";
   index: number;
 };
 
@@ -22,6 +23,7 @@ export function ArchiveCollectionCard({
   seriesHint,
   href,
   media,
+  mediaType = "image",
   index,
 }: Props) {
   const reduced = usePrefersReducedMotion();
@@ -39,14 +41,33 @@ export function ArchiveCollectionCard({
         className="group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-xl border border-neon-cyan/30 bg-panel/90 hologram-border box-glow transition-shadow hover:border-neon-cyan/60 hover:shadow-[0_0_32px_rgba(0,240,255,0.2)] focus-visible:outline-none"
       >
         <div className="relative aspect-[16/9] overflow-hidden bg-void cyber-grid">
-          <Image
-            src={media}
-            alt={title}
-            fill
-            unoptimized
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          {media ? (
+            mediaType === "video" ? (
+              <video
+                src={media}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <Image
+                src={media}
+                alt={title}
+                fill
+                unoptimized
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            )
+          ) : (
+            <div className="flex h-full items-center justify-center bg-void px-6 text-center">
+              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-neon-cyan/70">
+                Live Archive Node
+              </span>
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent opacity-90" />
         </div>
 
