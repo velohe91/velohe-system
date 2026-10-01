@@ -150,37 +150,39 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
 
 function getLunaryaStateNumber(nft: OpenSeaNft): string | null {
   const match = nft.name?.match(/Recorded State\s+(\d+)/i);
-  return match?.[1]?.padStart(2, "0") ?? null;
+  const stateNumber = match?.[1];
+
+  return stateNumber && Number(stateNumber) >= 1 && Number(stateNumber) <= 8
+    ? stateNumber.padStart(2, "0")
+    : null;
 }
 
-function normalizeLunarya(nft: OpenSeaNft): NftItem {
+function normalizeLunarya(nft: OpenSeaNft): NftItem | null {
   const stateNumber = getLunaryaStateNumber(nft);
-  const legacy = stateNumber
-    ? getNftById(`VEL-LRS${stateNumber}`)
-    : undefined;
 
+  if (!stateNumber) {
+    return null;
+  }
+
+  const legacy = getNftById(`VEL-LRS${stateNumber}`);
   const imageUrl = nft.image_url || "";
   const videoUrl = isVideoMedia(imageUrl)
     ? imageUrl
     : nft.original_animation_url || nft.animation_url || undefined;
 
   return {
-    id: stateNumber
-      ? `VEL-LRS${stateNumber}`
-      : `VEL-LRS-TOKEN-${nft.identifier}`,
+    id: `VEL-LRS${stateNumber}`,
     title:
       nft.name?.trim() ||
-      legacy?.title ||
-      `Lunarya Recorded State #${nft.identifier}`,
+      `Lunarya Recorded State #${stateNumber}`,
     image: isVideoMedia(imageUrl) ? "" : imageUrl,
     video: videoUrl,
     description:
       nft.description?.trim() ||
-      legacy?.description ||
       "Live Lunarya Recorded State recorded on Ethereum.",
     lore:
-      legacy?.lore ||
       nft.description?.trim() ||
+      legacy?.lore ||
       "Live Lunarya Recorded State recorded on Ethereum.",
     series: "Lunarya Recorded States",
     rarity: rarityFromTraits(nft.traits),
@@ -218,10 +220,19 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
 
     const payload = (await response.json()) as OpenSeaResponse;
 
-    return (payload.nfts ?? [])
-      .map(normalizeLunarya)
-      .filter((nft) => Boolean(nft.image || nft.video))
-      .sort((a, b) => nftIdNumber(a.id) - nftIdNumber(b.id));
+    const states = new Map<string, NftItem>();
+
+    for (const nft of payload.nfts ?? []) {
+      const normalized = normalizeLunarya(nft);
+
+      if (normalized && (normalized.image || normalized.video)) {
+        states.set(normalized.id, normalized);
+      }
+    }
+
+    return [...states.values()].sort(
+      (a, b) => nftIdNumber(a.id) - nftIdNumber(b.id),
+    );
   } catch (error) {
     console.error(
       "[VΣLOHE Archive] Failed to load Lunarya Recorded States",
