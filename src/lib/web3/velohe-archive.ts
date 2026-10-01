@@ -267,7 +267,7 @@ function extractAethergridStarEmojis(description?: string | null): string {
     .join("");
 }
 
-function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
+function normalizeAethergridSpirit(nft: OpenSeaNft, displayNumber: number): NftItem {
   const tokenId = nft.identifier;
   const imageUrl = nft.image_url || "";
   const videoUrl = isVideoMedia(imageUrl)
@@ -275,10 +275,10 @@ function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
     : nft.original_animation_url || nft.animation_url || undefined;
 
   return {
-    id: `VEL-AGS${tokenId.padStart(3, "0")}`,
+    id: `VΣL-AGS${displayNumber.toString().padStart(3, "0")}`,
     title:
       nft.name?.trim() ||
-      `The Aethergrid Spirits #${tokenId}`,
+      `The Aethergrid Spirits #${displayNumber}`,
     image: isVideoMedia(imageUrl) ? "" : imageUrl,
     video: videoUrl,
     description: extractAethergridStarEmojis(nft.description),
@@ -346,13 +346,19 @@ export async function getLiveAethergridSpirits(): Promise<NftItem[]> {
     const nfts = await fetchAethergridSpirits();
     const spirits = new Map<string, NftItem>();
 
-    for (const nft of nfts) {
-      const normalized = normalizeAethergridSpirit(nft);
+    const orderedNfts = [...nfts].sort((a, b) => {
+      const aName = Number(a.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
+      const bName = Number(b.name?.match(/(\d+)\s*$/)?.[1] ?? 0);
+      return aName - bName;
+    });
+
+    orderedNfts.forEach((nft, index) => {
+      const normalized = normalizeAethergridSpirit(nft, index + 1);
 
       if (normalized.image || normalized.video) {
         spirits.set(normalized.id, normalized);
       }
-    }
+    });
 
     return [...spirits.values()].sort(
       (a, b) => nftIdNumber(a.id) - nftIdNumber(b.id),
