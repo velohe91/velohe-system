@@ -49,17 +49,26 @@ function rarityFromTraits(traits: OpenSeaNft["traits"]): NftRarity {
   }
 }
 
+function isVideoMedia(url?: string | null): boolean {
+  return Boolean(url && /\\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+}
+
 function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
   const tokenId = nft.identifier;
   const legacy = getNftById(
     `VEL-CBPS${tokenId.padStart(3, "0")}`,
   );
+  const imageUrl = nft.image_url || "";
+  const videoUrl =
+    nft.original_animation_url ||
+    nft.animation_url ||
+    (isVideoMedia(imageUrl) ? imageUrl : undefined);
 
   return {
     id: `VEL-CBPS${tokenId.padStart(3, "0")}`,
     title: nft.name?.trim() || legacy?.title || `Cyborg Punk State #${tokenId}`,
-    image: nft.image_url || "",
-    video: nft.original_animation_url || nft.animation_url || undefined,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
     description:
       nft.description?.trim() ||
       legacy?.description ||
