@@ -36,6 +36,8 @@ export function NftCard({
     index < 22
       ? `/nfts/images/${String(index + 1).padStart(3, "0")}.png`
       : nft.image;
+  const showMobileVideo = isMobile && Boolean(nft.video);
+  const showDesktopVideo = !isMobile && Boolean(nft.video) && isHovered;
 
   return (
     <motion.button
@@ -63,7 +65,7 @@ export function NftCard({
           unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
-            nft.video && isHovered ? "opacity-0" : "opacity-100"
+            showMobileVideo || showDesktopVideo ? "opacity-0" : "opacity-100"
           }`}
           priority={index < 4}
         />
