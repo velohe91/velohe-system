@@ -149,7 +149,7 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
 
 
 function getLunaryaStateNumber(nft: OpenSeaNft): string | null {
-  const match = nft.name?.match(/Recorded State\\s+(\\d+)/i);
+  const match = nft.name?.match(/Recorded State\s+(\d+)/i);
   return match?.[1]?.padStart(2, "0") ?? null;
 }
 
