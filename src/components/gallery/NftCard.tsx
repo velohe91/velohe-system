@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { NftItem } from "@/lib/types";
 import { RARITY_COLORS } from "@/lib/constants";
@@ -19,13 +20,33 @@ export function NftCard({
   mediaAspect = "square",
 }: Props) {
   const rarityClass = RARITY_COLORS[nft.rarity] ?? RARITY_COLORS.common;
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
+  const staticImage =
+    index < 22
+      ? `/nfts/images/${String(index + 1).padStart(3, "0")}.png`
+      : nft.image;
+  const showMobileVideo = isMobile && Boolean(nft.video);
+  const showDesktopVideo = !isMobile && Boolean(nft.video) && isHovered;
 
   return (
     <motion.button
       type="button"
       onClick={() => onOpen(nft)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
       className="group relative z-0 flex w-full flex-col overflow-hidden rounded-lg border border-neon-cyan/20 bg-panel/80 text-left hologram-border box-glow transition-shadow hover:box-glow-strong focus-visible:outline-none"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -36,26 +57,30 @@ export function NftCard({
       <div
         className={`relative ${mediaAspectClass} overflow-hidden bg-void cyber-grid`}
       >
-        {nft.video ? (
+        {/* Keep the static first-frame image mounted until the card is hovered. */}
+        <Image
+          src={staticImage}
+          alt={nft.title}
+          fill
+          unoptimized
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
+            showMobileVideo || showDesktopVideo ? "opacity-0" : "opacity-100"
+          }`}
+          priority={index < 4}
+        />
+
+        {nft.video && (showMobileVideo || showDesktopVideo) && (
           <video
+            key={nft.video}
             src={nft.video}
-            poster={nft.image || undefined}
             autoPlay
             muted
             loop
             playsInline
+            preload="metadata"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            aria-label={`${nft.title} — video`}
-          />
-        ) : (
-          /* unoptimized: serve /public paths as-is (avoids optimizer 404/timeouts on large NFT media) */
-          <Image
-            src={nft.image}
-            alt={nft.title}
-            fill
-            unoptimized
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            aria-label={`${nft.title} — preview`}
           />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent opacity-80" />

@@ -9,7 +9,7 @@ export function EnterArchiveButton() {
 
   return (
     <motion.div
-      className="mt-10"
+      className="mt-4"
       initial={reduced ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduced ? 0 : 2.1, duration: 0.5 }}

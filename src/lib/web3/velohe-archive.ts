@@ -257,6 +257,16 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
 const AETHERGRID_SPIRITS_CONTRACT =
   "0x407ccb1e09eb93525c2a5d12aeb1a46da135d737";
 
+function extractAethergridStarEmojis(description?: string | null): string {
+  if (!description) return "";
+
+  return Array.from(
+    description.matchAll(/⭐/gu),
+  )
+    .map((match) => match[0])
+    .join("");
+}
+
 function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
   const tokenId = nft.identifier;
   const imageUrl = nft.image_url || "";
@@ -271,9 +281,7 @@ function normalizeAethergridSpirit(nft: OpenSeaNft): NftItem {
       `The Aethergrid Spirits #${tokenId}`,
     image: isVideoMedia(imageUrl) ? "" : imageUrl,
     video: videoUrl,
-    description:
-      nft.description?.trim() ||
-      "Live Aethergrid Spirit recorded on Ethereum.",
+    description: extractAethergridStarEmojis(nft.description),
     lore:
       nft.description?.trim() ||
       "Live Aethergrid Spirit recorded on Ethereum.",
