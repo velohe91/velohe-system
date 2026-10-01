@@ -7,7 +7,7 @@ const LINES = [
   { text: "> BOOT SEQUENCE INITIATED…", delay: 0.4 },
   { text: "> SYSTEM ONLINE", delay: 0.9 },
   { text: "> ARCHIVE LINK STABLE", delay: 1.3 },
-  { text: "> EXHIBITION READY", delay: 1.7 },
+  { text: "> LIVE NFT ARCHIVE READY", delay: 1.7 },
   { text: "> MARKET TICKERS ONLINE", delay: 2.1 },
   { text: "> WEB3 NETWORK LAYER STABLE", delay: 2.5 },
   { text: "> MINTING SOON", delay: 2.9 },
