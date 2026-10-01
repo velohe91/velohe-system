@@ -1,3 +1,17 @@
+/**
+ * Long-form transmissions (articles).
+ * Live ≈ TX-VΣ## · Archive ≈ TX-001–008
+ * Merged/sorted in data/feed.ts.
+ *
+ * HOW TO ADD A TRANSMISSION:
+ * 1. Push a new object with kind: "transmission" and era: "live" | "archive"
+ * 2. Use a unique `id` and a display `date`
+ * 3. Write full multi-paragraph `content`
+ * 4. Optionally set `relatedNftId` / `tags` / `readingTimeMinutes` / `blogLink`
+ */
+
+import type { TransmissionArticle } from "@/lib/types";
+
 export const transmissionArticles: TransmissionArticle[] = [
   // ─── Live (TX-VΣ##) — sorted newest-first in feed.ts ───
   {
@@ -46,22 +60,7 @@ LIVE NFT ARCHIVE: ACTIVE.
 ON-CHAIN RECORDS: CONNECTED.
 COLLECTION NODES: ONLINE.`,
   },
-
-· Archive ≈ TX-001–008
- * Merged/sorted in data/feed.ts.
- *
- * HOW TO ADD A TRANSMISSION:
- * 1. Push a new object with kind: "transmission" and era: "live" | "archive"
- * 2. Use a unique `id` and a display `date`
- * 3. Write full multi-paragraph `content`
- * 4. Optionally set `relatedNftId` / `tags` / `readingTimeMinutes` / `blogLink`
- */
-
-import type { TransmissionArticle } from "@/lib/types";
-
-export const transmissionArticles: TransmissionArticle[] = [
-  // ─── Live (TX-VΣ##) — sorted newest-first in feed.ts ───
-{
+  {
     kind: "transmission",
     era: "live",
     id: "TX-VΣ03",
@@ -95,9 +94,9 @@ LIVE SYNCHRONIZATION: 45s.
 
 The connection is stable.
 
-Awaiting further signals from the network.`
+Awaiting further signals from the network.`,
   },
-{
+  {
     kind: "transmission",
     era: "live",
     id: "TX-VΣ02",
@@ -108,9 +107,8 @@ Awaiting further signals from the network.`
 
 But Lunarya was always one step ahead. Her fingers flew across the holographic keyboard, isolating her private network from the government's mainframe. On the main screen, an encrypted folder opened, harmlessly classified under the name: CyborgPunks Club. To the State's auditors, these files were nothing more than a bizarre collection of digital art—pixelated avatars, urban aesthetics, and vibrant colors. Digital trash.
 
-What the censors didn't know was that every pixel, color palette, and geometric stroke concealed terabytes of genetic code and biomechanical assembly schematics. The CyborgPunks weren't just art; they were a dormant army.  A red alert flashed on the screen. The government forces had begun their assault on the east sector. It was now or never. Lunarya knew that conventional channels would be intercepted in seconds by government algorithms. She needed an immutable path. A network that belonged to no one, and therefore, no one could shut down. She invoked the protocols of the old decentralized web, hiding the ignition sequences within smart contracts on the Ethereum and Tezos blockchains.`,
+What the censors didn't know was that every pixel, color palette, and geometric stroke concealed terabytes of genetic code and biomechanical assembly schematics. The CyborgPunks weren't just art; they were a dormant army. A red alert flashed on the screen. The government forces had begun their assault on the east sector. It was now or never. Lunarya knew that conventional channels would be intercepted in seconds by government algorithms. She needed an immutable path. A network that belonged to no one, and therefore, no one could shut down. She invoked the protocols of the old decentralized web, hiding the ignition sequences within smart contracts on the Ethereum and Tezos blockchains.`,
   },
-  
   {
     kind: "transmission",
     era: "live",
