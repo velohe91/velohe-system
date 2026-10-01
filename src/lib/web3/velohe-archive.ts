@@ -275,7 +275,7 @@ function normalizeAethergridSpirit(nft: OpenSeaNft, displayNumber: number): NftI
     : nft.original_animation_url || nft.animation_url || undefined;
 
   return {
-    id: `VEL-AGS${displayNumber.toString().padStart(3, "0")}`,
+    id: `VΣL-AGS${displayNumber.toString().padStart(3, "0")}`,
     title:
       nft.name?.trim() ||
       `The Aethergrid Spirits #${displayNumber}`,
