@@ -32,9 +32,13 @@ export function NftCard({
   }, []);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
+  const isAethergrid = nft.series === "The Aethergrid Spirits";
   const nftNumber = nft.id.match(/(\d+)$/)?.[1];
   const staticImage =
-    nftNumber && Number(nftNumber) >= 1 && Number(nftNumber) <= 22
+    isAethergrid &&
+    nftNumber &&
+    Number(nftNumber) >= 1 &&
+    Number(nftNumber) <= 22
       ? `/nfts/images/${nftNumber.padStart(3, "0")}.png`
       : nft.image;
   const showMobileVideo = isMobile && Boolean(nft.video);
