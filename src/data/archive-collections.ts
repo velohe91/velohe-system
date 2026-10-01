@@ -15,17 +15,6 @@ export type ArchiveCollection = {
 
 export const archiveCollections: ArchiveCollection[] = [
   {
-    id: "velohe-system",
-    title: "VELOHE SYSTEM Node",
-    description:
-      "Live VELOHE SYSTEM identities recorded on Ethereum and preserved within the official system archive.",
-    badge: "ETHEREUM // LIVE",
-    seriesHint: "VELOHE SYSTEM · on-chain identities",
-    href: "/gallery/archive/velohe-system",
-    media: "",
-    contract: "0xd9ca0acaa8ff27f75965d52e56dd9e9c5b6c9c6c",
-  },
-  {
     id: "aethergrid-spirits",
     title: "The Aethergrid Spirits Node",
     description:
@@ -46,6 +35,17 @@ export const archiveCollections: ArchiveCollection[] = [
     href: "/gallery/archive/cyborg-punk-states",
     media: "/nfts/images/VEL-CBPS001.png",
     contract: "0x03d29e93692f0cd22d89e59f45b166a40c34b1c1",
+  },
+  {
+    id: "velohe-system",
+    title: "VELOHE SYSTEM Node",
+    description:
+      "Live VELOHE SYSTEM identities recorded on Ethereum and preserved within the official system archive.",
+    badge: "ETHEREUM // LIVE",
+    seriesHint: "VELOHE SYSTEM · on-chain identities",
+    href: "/gallery/archive/velohe-system",
+    media: "",
+    contract: "0xd9ca0acaa8ff27f75965d52e56dd9e9c5b6c9c6c",
   },
   {
     id: "lunarya-recorded-states",
