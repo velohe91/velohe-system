@@ -34,7 +34,13 @@ export function NftGrid({ items, mediaAspect = "square" }: Props) {
       {/* Responsive grid: 1 → 2 (sm) → 3 (md) → 5 (lg+) · genesis first */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-5">
         {ordered.map((nft, i) => (
-          <NftCard key={nft.id} nft={nft} index={i} onOpen={open} />
+          <NftCard
+            key={nft.id}
+            nft={nft}
+            index={i}
+            onOpen={open}
+            mediaAspect={mediaAspect}
+          />
         ))}
       </div>
       <NftModal nft={selected} onClose={close} mediaAspect={mediaAspect} />
