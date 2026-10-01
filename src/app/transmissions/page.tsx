@@ -17,7 +17,7 @@ export default function TransmissionsPage() {
         <SectionHeading
           eyebrow="Comms // Stream"
           title="Transmissions"
-          subtitle="Live Feed: system broadcasts, TX-VΣ, and LOG-VΣ (newest first). Archives: TX-001–008 and LOG-001–009."
+          subtitle="Live Feed: system broadcasts and TX-VΣ (newest first). Archives: LOG-VΣ, TX-001–008, and LOG-001–009."
         />
         <CommsStream
           liveItems={liveFeedItems}

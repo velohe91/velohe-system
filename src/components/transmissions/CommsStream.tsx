@@ -53,11 +53,11 @@ export function CommsStream({
 
       {isArchive ? (
         <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.25em] text-violet-300/70">
-          {"// sealed channel · TX-001–008 · LOG-001–009 · newest first"}
+          {"// sealed channel · LOG-VΣ · TX-001–008 · LOG-001–009 · newest first"}
         </p>
       ) : (
         <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.25em] text-neon-cyan/70">
-          {"// live channel · BC · TX-VΣ · LOG-VΣ · newest first"}
+          {"// live channel · BC · TX-VΣ · newest first"}
         </p>
       )}
 
