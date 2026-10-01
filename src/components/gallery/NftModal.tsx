@@ -159,25 +159,13 @@ export function NftModal({
                   />
                 )}
 
-                {/* Still / Motion toggle when both assets exist */}
+                {/* Motion control when an animated asset exists */}
                 {nft.video && (
                   <div
                     className="absolute bottom-3 left-3 z-10 flex gap-1 rounded border border-neon-cyan/30 bg-void/80 p-0.5 font-mono text-[9px] uppercase tracking-wider backdrop-blur-sm"
                     role="group"
                     aria-label="Media mode"
                   >
-                    <button
-                      type="button"
-                      onClick={() => setMediaMode("still")}
-                      className={`rounded px-2 py-1 transition-colors ${
-                        mediaMode === "still"
-                          ? "bg-neon-cyan/20 text-neon-cyan"
-                          : "text-muted hover:text-foreground"
-                      }`}
-                      aria-pressed={mediaMode === "still"}
-                    >
-                      Still
-                    </button>
                     <button
                       type="button"
                       onClick={() => setMediaMode("motion")}
