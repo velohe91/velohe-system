@@ -4,6 +4,7 @@ import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
+import { getLiveAethergridSpirits } from "@/lib/web3/velohe-archive";
 
 export const metadata: Metadata = {
   title: "VΣLOHE SYSTEM Archive",
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
     "The foundational identities of VΣLOHE SYSTEM, preserved through their on-chain records.",
 };
 
-export default function ArchiveGalleryPage() {
+export default async function ArchiveGalleryPage() {
+  const aethergridSpirits = await getLiveAethergridSpirits();
+  const livePreview = aethergridSpirits[0];
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -31,7 +34,16 @@ export default function ArchiveGalleryPage() {
               badge={collection.badge}
               seriesHint={collection.seriesHint}
               href={collection.href}
-              media={collection.media}
+              media={
+                collection.id === "aethergrid-spirits"
+                  ? livePreview?.image || livePreview?.video
+                  : collection.media
+              }
+              mediaType={
+                collection.id === "aethergrid-spirits" && livePreview?.video
+                  ? "video"
+                  : "image"
+              }
               index={index}
             />
           ))}
