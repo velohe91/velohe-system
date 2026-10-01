@@ -33,6 +33,7 @@ export function NftCard({
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
   const isAethergrid = nft.series === "The Aethergrid Spirits";
+  const isCyborgPunk = nft.series === "Cyborg Punk States";
   const nftNumber = nft.id.match(/(\d+)$/)?.[1];
   const staticImage =
     isAethergrid &&
@@ -40,7 +41,9 @@ export function NftCard({
     Number(nftNumber) >= 1 &&
     Number(nftNumber) <= 22
       ? `/nfts/images/${nftNumber.padStart(3, "0")}.png`
-      : nft.image;
+      : isCyborgPunk && nft.id.startsWith("VEL-CBPS") && nftNumber
+        ? `/nfts/images/VEL-CBPS${nftNumber.padStart(3, "0")}.png`
+        : nft.image;
   const showMobileVideo = isMobile && Boolean(nft.video);
   const showDesktopVideo = !isMobile && Boolean(nft.video) && isHovered;
 
