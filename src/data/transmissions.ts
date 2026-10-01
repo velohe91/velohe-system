@@ -1,6 +1,53 @@
-/**
- * Long-form transmissions (articles).
- * Live ≈ TX-VΣ## · Archive ≈ TX-001–008
+export const transmissionArticles: TransmissionArticle[] = [
+  // ─── Live (TX-VΣ##) — sorted newest-first in feed.ts ───
+  {
+    kind: "transmission",
+    era: "live",
+    id: "TX-VΣ05",
+    date: "2026.10.01_22:00",
+    title: "ARCADE PROTOCOL — SCORE LAYER INITIALIZED",
+    tags: ["arcade", "game", "score", "nft", "web3"],
+    content: `The ARCADE layer is now active within VΣLOHE SYSTEM.
+
+The game is still under development, but its purpose is already defined: play, accumulate score, and turn performance into access.
+
+Arcade score will be designed as a future reward mechanism for obtaining NFTs within the VΣLOHE ecosystem.
+
+The system is not ready to issue those rewards yet. The score economy, reward rules, and NFT integration remain under development.
+
+For now, the objective is simple:
+
+PLAY.
+SCORE.
+CLIMB.
+
+Your score will matter when the ARCADE reward layer goes live.
+
+ARCADE PROTOCOL: IN DEVELOPMENT.
+SCORE UTILITY: NFT REWARD LAYER PLANNED.
+REWARD INTEGRATION: PENDING.`,
+  },
+  {
+    kind: "transmission",
+    era: "live",
+    id: "TX-VΣ04",
+    date: "2026.10.01_21:30",
+    title: "LIVE NFT ARCHIVE — ON-CHAIN RECORDS CONNECTED",
+    tags: ["live nft", "archive", "ethereum", "on-chain", "web3"],
+    content: `The VΣLOHE SYSTEM Archive has entered a new state.
+
+Live NFT collections are now being connected to their on-chain records and displayed directly through the system archive.
+
+The archive is no longer only a catalog of preserved identities. It now reads live collection data and presents those identities as active system records.
+
+Collection nodes are online. NFT records are being synchronized. The archive layer is live.
+
+LIVE NFT ARCHIVE: ACTIVE.
+ON-CHAIN RECORDS: CONNECTED.
+COLLECTION NODES: ONLINE.`,
+  },
+
+· Archive ≈ TX-001–008
  * Merged/sorted in data/feed.ts.
  *
  * HOW TO ADD A TRANSMISSION:
