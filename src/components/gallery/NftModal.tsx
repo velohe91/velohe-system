@@ -185,6 +185,7 @@ export function NftModal({
                     </svg>
                   </button>
                 )}
+              </div>
 
               <div
                 ref={contentRef}
