@@ -41,9 +41,9 @@ export default function HomePage() {
         </motion.p>
 
         <SystemBootSequence />
-        <EnterArchiveButton />
         <PlayGameButton />
         <MintSoonButton />
+        <EnterArchiveButton />
       </div>
     </section>
   );
