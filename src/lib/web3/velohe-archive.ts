@@ -1,4 +1,4 @@
-import { getNftById } from "@/data/nfts";
+import { getNftById, nftIdNumber } from "@/data/nfts";
 import type { NftItem, NftRarity } from "@/lib/types";
 
 const CYBORG_PUNK_STATES_CONTRACT =
@@ -148,21 +148,30 @@ export async function getLiveCyborgPunkStates(): Promise<NftItem[]> {
 }
 
 
+function getLunaryaStateNumber(nft: OpenSeaNft): string | null {
+  const match = nft.name?.match(/Recorded State\\s+(\\d+)/i);
+  return match?.[1]?.padStart(2, "0") ?? null;
+}
+
 function normalizeLunarya(nft: OpenSeaNft): NftItem {
-  const tokenId = nft.identifier;
-  const legacy = getNftById(
-    `VEL-LRS${tokenId === "2" ? "01" : tokenId === "4" ? "02" : tokenId === "6" ? "03" : tokenId === "8" ? "04" : tokenId === "7" ? "05" : tokenId.padStart(2, "0")}`,
-  );
+  const stateNumber = getLunaryaStateNumber(nft);
+  const legacy = stateNumber
+    ? getNftById(`VEL-LRS${stateNumber}`)
+    : undefined;
 
   const imageUrl = nft.image_url || "";
-  const videoUrl =
-    nft.original_animation_url ||
-    nft.animation_url ||
-    (isVideoMedia(imageUrl) ? imageUrl : undefined);
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
 
   return {
-    id: legacy?.id ?? `VEL-LRS${tokenId.padStart(2, "0")}`,
-    title: nft.name?.trim() || legacy?.title || `Lunarya Recorded State #${tokenId}`,
+    id: stateNumber
+      ? `VEL-LRS${stateNumber}`
+      : `VEL-LRS-TOKEN-${nft.identifier}`,
+    title:
+      nft.name?.trim() ||
+      legacy?.title ||
+      `Lunarya Recorded State #${nft.identifier}`,
     image: isVideoMedia(imageUrl) ? "" : imageUrl,
     video: videoUrl,
     description:
@@ -177,7 +186,7 @@ function normalizeLunarya(nft: OpenSeaNft): NftItem {
     rarity: rarityFromTraits(nft.traits),
     marketplace:
       nft.opensea_url ||
-      `https://opensea.io/item/ethereum/${LUNARYA_RECORDED_STATES_CONTRACT}/${tokenId}`,
+      `https://opensea.io/item/ethereum/${LUNARYA_RECORDED_STATES_CONTRACT}/${nft.identifier}`,
     objkt: legacy?.objkt,
     status: legacy?.status ?? "Initialization",
     year: legacy?.year ?? 2052,
@@ -211,7 +220,8 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
 
     return (payload.nfts ?? [])
       .map(normalizeLunarya)
-      .filter((nft) => Boolean(nft.image || nft.video));
+      .filter((nft) => Boolean(nft.image || nft.video))
+      .sort((a, b) => nftIdNumber(a.id) - nftIdNumber(b.id));
   } catch (error) {
     console.error(
       "[VΣLOHE Archive] Failed to load Lunarya Recorded States",
