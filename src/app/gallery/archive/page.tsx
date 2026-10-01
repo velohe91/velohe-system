@@ -4,7 +4,10 @@ import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
-import { getLiveAethergridSpirits } from "@/lib/web3/velohe-archive";
+import {
+  getLiveAethergridSpirits,
+  getLiveVeloheSystem,
+} from "@/lib/web3/velohe-archive";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +18,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchiveGalleryPage() {
-  const aethergridSpirits = await getLiveAethergridSpirits();
-  const livePreview = aethergridSpirits[0];
+  const [aethergridSpirits, veloheSystem] = await Promise.all([
+    getLiveAethergridSpirits(),
+    getLiveVeloheSystem(),
+  ]);
+  const liveAethergridPreview = aethergridSpirits[0];
+  const liveVelohePreview = veloheSystem[0];
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
@@ -38,11 +45,14 @@ export default async function ArchiveGalleryPage() {
               href={collection.href}
               media={
                 collection.id === "aethergrid-spirits"
-                  ? livePreview?.image || livePreview?.video
-                  : collection.media
+                  ? liveAethergridPreview?.image || liveAethergridPreview?.video
+                  : collection.id === "velohe-system"
+                    ? liveVelohePreview?.image || liveVelohePreview?.video
+                    : collection.media
               }
               mediaType={
-                collection.id === "aethergrid-spirits" && livePreview?.video
+                (collection.id === "aethergrid-spirits" && liveAethergridPreview?.video) ||
+                (collection.id === "velohe-system" && liveVelohePreview?.video)
                   ? "video"
                   : "image"
               }
