@@ -261,7 +261,7 @@ function extractAethergridStarEmojis(description?: string | null): string {
   if (!description) return "";
 
   return Array.from(
-    description.matchAll(/(?:⭐️?|🌟|✨|💫)/gu),
+    description.matchAll(/⭐/gu),
   )
     .map((match) => match[0])
     .join("");
