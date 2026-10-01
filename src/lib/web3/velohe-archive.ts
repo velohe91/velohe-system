@@ -50,7 +50,7 @@ function rarityFromTraits(traits: OpenSeaNft["traits"]): NftRarity {
 }
 
 function isVideoMedia(url?: string | null): boolean {
-  return Boolean(url && /\\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
+  return Boolean(url && /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url));
 }
 
 function normalizeCyborgPunk(nft: OpenSeaNft): NftItem {
