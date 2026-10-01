@@ -19,7 +19,7 @@ export default async function LunaryaRecordedStatesPage() {
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
-        <GalleryBackLink />
+        <GalleryBackLink href="/gallery/archive" label="Archive" />
         <SectionHeading
           eyebrow="Archive // Collection Node"
           title="Lunarya Recorded State Node"
