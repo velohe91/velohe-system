@@ -346,3 +346,104 @@ export async function getLiveAethergridSpirits(): Promise<NftItem[]> {
     return [];
   }
 }
+
+
+const VELOHE_SYSTEM_CONTRACT =
+  "0xd9ca0acaa8ff27f75965d52e56dd9e9c5b6c9c6c";
+
+function normalizeVeloheSystem(nft: OpenSeaNft): NftItem {
+  const tokenId = nft.identifier;
+  const imageUrl = nft.image_url || "";
+  const videoUrl = isVideoMedia(imageUrl)
+    ? imageUrl
+    : nft.original_animation_url || nft.animation_url || undefined;
+
+  return {
+    id: `VEL-VSYS${tokenId.padStart(3, "0")}`,
+    title: nft.name?.trim() || `VELOHE SYSTEM #${tokenId}`,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
+    description:
+      nft.description?.trim() ||
+      "Live VELOHE SYSTEM identity recorded on Ethereum.",
+    lore:
+      nft.description?.trim() ||
+      "Live VELOHE SYSTEM identity recorded on Ethereum.",
+    series: "VELOHE SYSTEM",
+    rarity: rarityFromTraits(nft.traits),
+    marketplace:
+      nft.opensea_url ||
+      `https://opensea.io/item/ethereum/${VELOHE_SYSTEM_CONTRACT}/${tokenId}`,
+    status: "Archived",
+    tags: ["velohe-system", "ethereum"],
+  };
+}
+
+let veloheSystemPromise: Promise<OpenSeaNft[]> | null = null;
+
+async function fetchVeloheSystem(): Promise<OpenSeaNft[]> {
+  const apiKey = process.env.OPENSEA_API_KEY;
+
+  if (!apiKey) {
+    console.error("[VΣLOHE Archive] OPENSEA_API_KEY is not configured");
+    return [];
+  }
+
+  if (!veloheSystemPromise) {
+    veloheSystemPromise = (async () => {
+      const response = await fetch(
+        `${OPEN_SEA_API_URL}/${VELOHE_SYSTEM_CONTRACT}/nfts?limit=200`,
+        {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        console.error(
+          `[VΣLOHE Archive] OpenSea VELOHE SYSTEM error ${response.status}: ${body}`,
+        );
+        veloheSystemPromise = null;
+        return [];
+      }
+
+      const payload = (await response.json()) as OpenSeaResponse;
+      return payload.nfts ?? [];
+    })().catch((error) => {
+      veloheSystemPromise = null;
+      console.error(
+        "[VΣLOHE Archive] OpenSea VELOHE SYSTEM fetch failed:",
+        error,
+      );
+      return [];
+    });
+  }
+
+  return veloheSystemPromise;
+}
+
+export async function getLiveVeloheSystem(): Promise<NftItem[]> {
+  try {
+    const nfts = await fetchVeloheSystem();
+    const items = new Map<string, NftItem>();
+
+    for (const nft of nfts) {
+      const normalized = normalizeVeloheSystem(nft);
+
+      if (normalized.image || normalized.video) {
+        items.set(normalized.id, normalized);
+      }
+    }
+
+    return [...items.values()];
+  } catch (error) {
+    console.error(
+      "[VΣLOHE Archive] Failed to load VELOHE SYSTEM",
+      error,
+    );
+    return [];
+  }
+}
