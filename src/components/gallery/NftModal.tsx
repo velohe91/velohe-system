@@ -13,7 +13,6 @@ type Props = {
   mediaAspect?: "square" | "portrait";
 };
 
-type MediaMode = "still" | "motion";
 
 /** Classify optional motion asset: GIF uses <img>, MP4/WebM use <video>. */
 function getMotionKind(src?: string): "gif" | "video" | null {
@@ -43,7 +42,6 @@ export function NftModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [mounted, setMounted] = useState(false);
-  const [mediaMode, setMediaMode] = useState<MediaMode>("motion");
 
   useEffect(() => {
     setMounted(true);
@@ -51,9 +49,6 @@ export function NftModal({
 
   useEffect(() => {
     if (!nft) return;
-
-    // Prefer animated media when a motion asset exists
-    setMediaMode(nft.video ? "motion" : "still");
 
     const prev = document.activeElement as HTMLElement | null;
     // Always open scrolled to the top (title / media first).
@@ -85,7 +80,7 @@ export function NftModal({
     ? RARITY_COLORS[nft.rarity] ?? RARITY_COLORS.common
     : "";
   const motionKind = nft ? getMotionKind(nft.video) : null;
-  const showMotion = Boolean(nft?.video) && mediaMode === "motion";
+  const showMotion = Boolean(nft?.video);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
 
@@ -138,9 +133,8 @@ export function NftModal({
                   <video
                     key={nft.video}
                     src={nft.video}
-                    poster={nft.image}
+                    poster={nft.image || undefined}
                     autoPlay
-                    muted
                     loop
                     playsInline
                     className="absolute inset-0 h-full w-full object-cover"
@@ -159,27 +153,6 @@ export function NftModal({
                   />
                 )}
 
-                {/* Motion control when an animated asset exists */}
-                {nft.video && (
-                  <div
-                    className="absolute bottom-3 left-3 z-10 flex gap-1 rounded border border-neon-cyan/30 bg-void/80 p-0.5 font-mono text-[9px] uppercase tracking-wider backdrop-blur-sm"
-                    role="group"
-                    aria-label="Media mode"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setMediaMode("motion")}
-                      className={`rounded px-2 py-1 transition-colors ${
-                        mediaMode === "motion"
-                          ? "bg-neon-cyan/20 text-neon-cyan"
-                          : "text-muted hover:text-foreground"
-                      }`}
-                      aria-pressed={mediaMode === "motion"}
-                    >
-                      Motion
-                    </button>
-                  </div>
-                )}
               </div>
 
               <div
