@@ -1,5 +1,5 @@
 export type ArchiveCollection = {
-  id: "cyborg-punk-states" | "lunarya-recorded-states";
+  id: "cyborg-punk-states" | "lunarya-recorded-states" | "aethergrid-spirits";
   title: string;
   description: string;
   badge: string;
@@ -31,5 +31,16 @@ export const archiveCollections: ArchiveCollection[] = [
     href: "/gallery/archive/lunarya-recorded-states",
     media: "/nfts/images/VEL-LRS01.png",
     contract: "0x936f35db20399803edd5b57f1d2ea4e6e51b67e9",
+  },
+  {
+    id: "aethergrid-spirits",
+    title: "The Aethergrid Spirits Node",
+    description:
+      "Live Aethergrid Spirits recorded on Ethereum and preserved as foundational VΣLOHE SYSTEM identities.",
+    badge: "ETHEREUM // LIVE",
+    seriesHint: "The Aethergrid Spirits · on-chain identities",
+    href: "/gallery/archive/aethergrid-spirits",
+    media: "",
+    contract: "0x407ccb1e09eb93525c2a5d12aeb1a46da135d737",
   },
 ];
