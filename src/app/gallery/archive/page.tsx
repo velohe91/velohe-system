@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-
-export const dynamic = "force-dynamic";
 import { ArchiveCollectionCard } from "@/components/gallery/ArchiveCollectionCard";
 import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { archiveCollections } from "@/data/archive-collections";
 import { getLiveAethergridSpirits } from "@/lib/web3/velohe-archive";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "VΣLOHE SYSTEM Archive",
