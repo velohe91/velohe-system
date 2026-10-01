@@ -154,11 +154,17 @@ function normalizeLunarya(nft: OpenSeaNft): NftItem {
     `VEL-LRS${tokenId === "2" ? "01" : tokenId === "4" ? "02" : tokenId === "6" ? "03" : tokenId === "8" ? "04" : tokenId === "7" ? "05" : tokenId.padStart(2, "0")}`,
   );
 
+  const imageUrl = nft.image_url || "";
+  const videoUrl =
+    nft.original_animation_url ||
+    nft.animation_url ||
+    (isVideoMedia(imageUrl) ? imageUrl : undefined);
+
   return {
     id: legacy?.id ?? `VEL-LRS${tokenId.padStart(2, "0")}`,
     title: nft.name?.trim() || legacy?.title || `Lunarya Recorded State #${tokenId}`,
-    image: nft.image_url || legacy?.image || "",
-    video: nft.animation_url || legacy?.video,
+    image: isVideoMedia(imageUrl) ? "" : imageUrl,
+    video: videoUrl,
     description:
       nft.description?.trim() ||
       legacy?.description ||
@@ -205,7 +211,7 @@ export async function getLiveLunaryaRecordedStates(): Promise<NftItem[]> {
 
     return (payload.nfts ?? [])
       .map(normalizeLunarya)
-      .filter((nft) => Boolean(nft.image));
+      .filter((nft) => Boolean(nft.image || nft.video));
   } catch (error) {
     console.error(
       "[VΣLOHE Archive] Failed to load Lunarya Recorded States",
