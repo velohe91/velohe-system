@@ -23,6 +23,10 @@ export function NftCard({
   const [isHovered, setIsHovered] = useState(false);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
+  const staticImage =
+    index < 22
+      ? `/nfts/images/${String(index + 1).padStart(3, "0")}.png`
+      : nft.image;
 
   return (
     <motion.button
@@ -44,7 +48,7 @@ export function NftCard({
       >
         {/* Keep the static first-frame image mounted until the card is hovered. */}
         <Image
-          src={nft.image}
+          src={staticImage}
           alt={nft.title}
           fill
           unoptimized
