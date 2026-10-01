@@ -13,8 +13,6 @@ type Props = {
   mediaAspect?: "square" | "portrait";
 };
 
-type MediaMode = "still" | "motion";
-
 /** Classify optional motion asset: GIF uses <img>, MP4/WebM use <video>. */
 function getMotionKind(src?: string): "gif" | "video" | null {
   if (!src) return null;
@@ -43,7 +41,8 @@ export function NftModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [mounted, setMounted] = useState(false);
-  const [mediaMode, setMediaMode] = useState<MediaMode>("motion");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -51,9 +50,6 @@ export function NftModal({
 
   useEffect(() => {
     if (!nft) return;
-
-    // Prefer animated media when a motion asset exists
-    setMediaMode(nft.video ? "motion" : "still");
 
     const prev = document.activeElement as HTMLElement | null;
     // Always open scrolled to the top (title / media first).
@@ -85,7 +81,7 @@ export function NftModal({
     ? RARITY_COLORS[nft.rarity] ?? RARITY_COLORS.common
     : "";
   const motionKind = nft ? getMotionKind(nft.video) : null;
-  const showMotion = Boolean(nft?.video) && mediaMode === "motion";
+  const showMotion = Boolean(nft?.video);
   const mediaAspectClass =
     mediaAspect === "portrait" ? "aspect-[9/16]" : "aspect-square";
 
@@ -136,15 +132,17 @@ export function NftModal({
                   />
                 ) : showMotion && motionKind === "video" && nft.video ? (
                   <video
+                    ref={videoRef}
                     key={nft.video}
                     src={nft.video}
                     poster={nft.image}
-                    autoPlay
-                    muted
                     loop
                     playsInline
                     className="absolute inset-0 h-full w-full object-cover"
-                    aria-label={`${nft.title} — video`}
+                    aria-label="Video"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
                   />
                 ) : (
                   <Image
@@ -159,28 +157,34 @@ export function NftModal({
                   />
                 )}
 
-                {/* Motion control when an animated asset exists */}
-                {nft.video && (
-                  <div
-                    className="absolute bottom-3 left-3 z-10 flex gap-1 rounded border border-neon-cyan/30 bg-void/80 p-0.5 font-mono text-[9px] uppercase tracking-wider backdrop-blur-sm"
-                    role="group"
-                    aria-label="Media mode"
+                {nft.video && motionKind === "video" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const video = videoRef.current;
+                      if (!video) return;
+
+                      if (video.paused) {
+                        void video.play();
+                      } else {
+                        video.pause();
+                      }
+                    }}
+                    className="absolute bottom-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/35 bg-void/75 text-white backdrop-blur-sm transition-colors hover:border-neon-cyan/70 hover:bg-void/90 hover:text-neon-cyan"
+                    aria-label={isPlaying ? "Pause video" : "Play video"}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setMediaMode("motion")}
-                      className={`rounded px-2 py-1 transition-colors ${
-                        mediaMode === "motion"
-                          ? "bg-neon-cyan/20 text-neon-cyan"
-                          : "text-muted hover:text-foreground"
-                      }`}
-                      aria-pressed={mediaMode === "motion"}
-                    >
-                      Motion
-                    </button>
-                  </div>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                      {isPlaying ? (
+                        <>
+                          <rect x="6" y="5" width="4" height="14" rx="1" />
+                          <rect x="14" y="5" width="4" height="14" rx="1" />
+                        </>
+                      ) : (
+                        <path d="M8 5.5v13l10-6.5-10-6.5z" />
+                      )}
+                    </svg>
+                  </button>
                 )}
-              </div>
 
               <div
                 ref={contentRef}
