@@ -47,8 +47,8 @@ export function NftCard({
         ? `/nfts/images/VEL-CBPS${nftNumber.padStart(3, "0")}.png`
         : isLunarya && nft.id.startsWith("VEL-LRS") && nftNumber
           ? `/nfts/images/LRS${nftNumber.padStart(2, "0")}.png`
-          : isVeloheSystem && nft.id.startsWith("VEL-VSYS") && nftNumber
-            ? `/nfts/images/AGD-${nftNumber.padStart(2, "0")}.png`
+          : isVeloheSystem
+            ? `/nfts/images/AGD-${String(index + 1).padStart(2, "0")}.png`
             : nft.image;
   const showMobileVideo = isMobile && Boolean(nft.video);
   const showDesktopVideo = !isMobile && Boolean(nft.video) && isHovered;
