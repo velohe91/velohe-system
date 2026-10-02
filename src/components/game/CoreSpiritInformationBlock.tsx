@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const CORE_SPIRITS = [
@@ -59,10 +60,13 @@ function detectSectorIndex() {
 }
 
 export function CoreSpiritInformationBlock() {
+  const pathname = usePathname();
   const [sectorIndex, setSectorIndex] = useState(0);
   const spirit = CORE_SPIRITS[sectorIndex];
 
   useEffect(() => {
+    if (pathname !== "/arcade") return;
+
     const syncSector = () => {
       const nextIndex = detectSectorIndex();
       setSectorIndex((current) => (current === nextIndex ? current : nextIndex));
@@ -78,7 +82,9 @@ export function CoreSpiritInformationBlock() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
+
+  if (pathname !== "/arcade") return null;
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6 lg:px-8">
