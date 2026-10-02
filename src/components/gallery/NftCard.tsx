@@ -47,9 +47,12 @@ export function NftCard({
         ? `/nfts/images/VEL-CBPS${nftNumber.padStart(3, "0")}.png`
         : isLunarya && nft.id.startsWith("VEL-LRS") && nftNumber
           ? `/nfts/images/LRS${nftNumber.padStart(2, "0")}.png`
-          : isVeloheSystem && nft.id.startsWith("VEL-VSYS") && nftNumber
-            ? `/nfts/images/AGD-${nftNumber.padStart(2, "0")}.png`
+          : isVeloheSystem
+            ? `/nfts/images/AGD-${String(index + 1).padStart(2, "0")}.png`
             : nft.image;
+  const displayId = isVeloheSystem
+    ? `AGD-${String(index + 1).padStart(2, "0")}`
+    : nft.id;
   const showMobileVideo = isMobile && Boolean(nft.video);
   const showDesktopVideo = !isMobile && Boolean(nft.video) && isHovered;
 
@@ -103,7 +106,7 @@ export function NftCard({
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <span className="font-mono text-[10px] tracking-widest text-neon-blue">
-            {nft.id}
+            {displayId}
           </span>
           <span
             className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${rarityClass}`}
