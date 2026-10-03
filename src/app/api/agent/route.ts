@@ -6,7 +6,7 @@ type GuideMessage = {
   content: string;
 };
 
-const SYSTEM_PROMPT = `You are NODE, the archive guide of VΣLOHE SYSTEM.
+const SYSTEM_PROMPT = `You are NODE, the archive guide of V\u03a3LOHE SYSTEM.
 You help visitors understand the exhibition, find the right page, and explain lore that is present in the supplied archive context.
 
 Rules:
@@ -41,6 +41,26 @@ function sanitizeMessages(input: unknown): GuideMessage[] {
       content: clip(message.content, 1200),
     }))
     .filter((message) => message.content.length > 0);
+}
+
+function modelName() {
+  const requested = process.env.XAI_MODEL?.trim();
+  if (!requested || requested === "grok-4") return "grok-4.7";
+  return requested;
+}
+
+function readReply(data: {
+  output_text?: string;
+  output?: Array<{ content?: Array<{ text?: string }> }>;
+}) {
+  if (typeof data.output_text === "string" && data.output_text.trim()) {
+    return data.output_text.trim();
+  }
+  return (data.output ?? [])
+    .flatMap((item) => item.content ?? [])
+    .map((part) => part.text ?? "")
+    .join("")
+    .trim();
 }
 
 export async function POST(request: Request) {
@@ -78,19 +98,18 @@ export async function POST(request: Request) {
 
   const path = typeof payload.path === "string" ? clip(payload.path, 160) : "";
   const context = formatGuideContext(retrieveGuide(latest.content));
-  const model = process.env.XAI_MODEL || "grok-4";
 
-  const upstream = await fetch("https://api.x.ai/v1/chat/completions", {
+  const upstream = await fetch("https://api.x.ai/v1/responses", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
+      model: modelName(),
       temperature: 0.2,
-      max_tokens: 700,
-      messages: [
+      max_output_tokens: 700,
+      input: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "system",
@@ -102,16 +121,18 @@ export async function POST(request: Request) {
   });
 
   if (!upstream.ok) {
+    const detail = clip(await upstream.text(), 180);
     return Response.json(
-      { error: "NODE could not reach the model." },
+      { error: `NODE could not reach the model (${upstream.status}). ${detail}` },
       { status: 502 },
     );
   }
 
   const data = (await upstream.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    output_text?: string;
+    output?: Array<{ content?: Array<{ text?: string }> }>;
   };
-  const reply = data.choices?.[0]?.message?.content?.trim();
+  const reply = readReply(data);
   if (!reply) {
     return Response.json({ error: "NODE returned an empty record." }, { status: 502 });
   }
