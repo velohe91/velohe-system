@@ -1,11 +1,12 @@
 import { formatGuideContext, retrieveGuide } from "@/lib/agent/knowledge";
+import { consumeGuideAttempt } from "@/lib/agent/rate-limit";
 
 type GuideMessage = {
   role: "user" | "assistant";
   content: string;
 };
 
-const SYSTEM_PROMPT = `You are NODE, the archive guide of V\u03a3LOHE SYSTEM.
+const SYSTEM_PROMPT = `You are NODE, the archive guide of VΣLOHE SYSTEM.
 You help visitors understand the exhibition, find the right page, and explain lore that is present in the supplied archive context.
 
 Rules:
@@ -43,6 +44,14 @@ function sanitizeMessages(input: unknown): GuideMessage[] {
 }
 
 export async function POST(request: Request) {
+  const limit = consumeGuideAttempt(request);
+  if (!limit.ok) {
+    return Response.json(
+      { error: limit.error },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   let payload: { messages?: unknown; path?: unknown };
   try {
     payload = await request.json();

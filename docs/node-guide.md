@@ -1,6 +1,6 @@
 # NODE // Archive Guide
 
-Visitor assistant for V\u03a3LOHE SYSTEM. It answers questions about the exhibition, routes people to the right page, and explains lore only from the existing catalog.
+Visitor assistant for VΣLOHE SYSTEM. It answers questions about the exhibition, routes people to the right page, and explains lore only from the existing catalog.
 
 It does not touch wallet connection, contracts, or the visual system.
 
@@ -22,3 +22,13 @@ XAI_MODEL=grok-4
 `XAI_MODEL` is optional. Use a smaller model if you want lower cost.
 
 Without `XAI_API_KEY`, the panel stays visible and reports that NODE is offline.
+
+## IP limit
+
+Checked before the model call, so a blocked request does not spend credits.
+
+- 8 seconds between questions
+- 8 questions per 15 minutes
+- 30 questions per 24 hours
+
+The counter lives in the server instance. On Vercel it stops bursts on a warm instance; it is not a shared counter across every region.
