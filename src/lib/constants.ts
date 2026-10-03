@@ -2,7 +2,7 @@
  * App-wide constants: routes, branding, and chrome copy.
  */
 
-export const SITE_NAME = "VΣLOHE SYSTEM";
+export const SITE_NAME = "V\u03a3LOHE SYSTEM";
 export const SITE_TAGLINE = "NFT Exhibition System";
 export const SITE_VERSION = "v2.0";
 
@@ -12,6 +12,7 @@ export const NAV_LINKS = [
   { href: "/transmissions", label: "Transmissions" },
   { href: "/about", label: "About" },
   { href: "/UnknownSector/theaethergrid", label: "Unknown Sector" },
+  { href: "/node", label: "Node" },
 ] as const;
 
 export const RARITY_COLORS: Record<string, string> = {

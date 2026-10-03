@@ -6,6 +6,7 @@ import { Scanlines } from "@/components/effects/Scanlines";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CoreSpiritInformationBlock } from "@/components/game/CoreSpiritInformationBlock";
+import { SystemNode } from "@/components/agent/SystemNode";
 
 /**
  * Global chrome: particles, scanlines, nav, and footer around page content.
@@ -21,6 +22,7 @@ export function ImmersiveShell({ children }: { children: ReactNode }) {
         <CoreSpiritInformationBlock />
       </main>
       <Footer />
+      <SystemNode />
     </div>
   );
 }
