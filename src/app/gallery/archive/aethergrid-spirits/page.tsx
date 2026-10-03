@@ -30,8 +30,7 @@ export default async function AethergridSpiritsPage() {
         <div className="mt-6 mb-6 flex justify-start">
           <NeonButton
             href="/arcade"
-            variant="outline"
-            className="min-w-[240px] border-neon-cyan/30 text-neon-cyan/85 hover:border-neon-cyan/60 hover:text-neon-cyan"
+            className="min-w-[240px] text-glow-sm"
           >
             ARCADE
           </NeonButton>
