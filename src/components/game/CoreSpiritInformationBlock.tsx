@@ -87,7 +87,7 @@ export function CoreSpiritInformationBlock() {
   if (pathname !== "/arcade") return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-2 sm:px-6 lg:px-8">
       <div
         className="overflow-hidden rounded-2xl border bg-black/55 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
         style={{ borderColor: `${spirit.accent}55` }}
