@@ -101,9 +101,9 @@ export function CoreSpiritInformationBlock() {
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.2em] text-white/40">
             <span>{spirit.code}</span>
-            <span>//</span>
+            <span>{"//"}</span>
             <span>{spirit.sector}</span>
-            <span>//</span>
+            <span>{"//"}</span>
             <span>THE AETHERGRID SPIRITS</span>
           </div>
         </div>
