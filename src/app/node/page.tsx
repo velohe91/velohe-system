@@ -6,7 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 export const metadata: Metadata = {
   title: "Archive Guide",
   description:
-    "Ask NODE where to go in V\u03a3LOHE SYSTEM and what the archive, lore, and transmissions mean.",
+    "Ask NODE where to go in VΣLOHE SYSTEM and what the archive, lore, and transmissions mean.",
 };
 
 export default function NodePage() {
@@ -16,7 +16,7 @@ export default function NodePage() {
         <SectionHeading
           eyebrow="NODE // VISITOR CHANNEL"
           title="Archive Guide"
-          description="Questions about the exhibition, collections, lore, and where to go next."
+          subtitle="Questions about the exhibition, collections, lore, and where to go next."
         />
         <SystemNode variant="page" />
       </div>
