@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +8,8 @@ type GuideMessage = {
   role: "user" | "assistant";
   content: string;
 };
+
+const COOLDOWN_MS = 8000;
 
 const PROMPTS = [
   "What is V\u03a3LOHE SYSTEM?",
@@ -39,6 +41,9 @@ export function SystemNode({
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  const cooldownUntilRef = useRef(0);
   const [messages, setMessages] = useState<GuideMessage[]>([
     {
       role: "assistant",
@@ -47,16 +52,33 @@ export function SystemNode({
     },
   ]);
 
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [cooldownUntil]);
+
+  const cooldownLeft = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+  const locked = pending || cooldownLeft > 0;
+
+  function startCooldown(ms = COOLDOWN_MS) {
+    const until = Date.now() + ms;
+    cooldownUntilRef.current = until;
+    setCooldownUntil(until);
+    setNow(Date.now());
+  }
+
   if (variant === "dock" && pathname === "/node") return null;
 
   async function ask(text: string) {
     const content = text.trim();
-    if (!content || pending) return;
+    if (!content || pending || Date.now() < cooldownUntilRef.current) return;
     const next = [...messages, { role: "user" as const, content }];
     setMessages(next);
     setDraft("");
     setError("");
     setPending(true);
+    startCooldown();
     try {
       const response = await fetch("/api/agent", {
         method: "POST",
@@ -68,6 +90,8 @@ export function SystemNode({
       });
       const data = (await response.json()) as { reply?: string; error?: string };
       if (!response.ok || !data.reply) {
+        const retryAfter = Number(response.headers.get("Retry-After"));
+        if (response.status === 429 && retryAfter > 8) startCooldown(retryAfter * 1000);
         setError(data.error || "NODE did not answer.");
         return;
       }
@@ -114,8 +138,9 @@ export function SystemNode({
           <button
             key={prompt}
             type="button"
+            disabled={locked}
             onClick={() => ask(prompt)}
-            className="border border-cyan-400/30 px-2 py-1 font-mono text-[10px] tracking-wide text-cyan-200"
+            className="border border-cyan-400/30 px-2 py-1 font-mono text-[10px] tracking-wide text-cyan-200 disabled:opacity-40"
           >
             {prompt}
           </button>
@@ -131,15 +156,16 @@ export function SystemNode({
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Ask about the archive"
-          className="min-w-0 flex-1 border border-cyan-400/30 bg-transparent px-2 py-2 font-mono text-sm text-cyan-50 outline-none"
+          placeholder={cooldownLeft > 0 ? `Next signal in ${cooldownLeft}s` : "Ask about the archive"}
+          disabled={locked}
+          className="min-w-0 flex-1 border border-cyan-400/30 bg-transparent px-2 py-2 font-mono text-sm text-cyan-50 outline-none disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={pending}
-          className="border border-cyan-300/70 px-3 font-mono text-xs tracking-[0.16em] text-cyan-200 disabled:opacity-50"
+          disabled={locked}
+          className="min-w-16 border border-cyan-300/70 px-3 font-mono text-xs tracking-[0.16em] text-cyan-200 disabled:opacity-50"
         >
-          SEND
+          {cooldownLeft > 0 ? `${cooldownLeft}s` : "SEND"}
         </button>
       </form>
       {variant === "dock" ? (
