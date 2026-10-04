@@ -4,6 +4,7 @@ import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { communityAcquisitions } from "@/data/community-acquisitions";
+import { getTezosExhibitionItems } from "@/lib/tezos/exhibition";
 
 export const metadata: Metadata = {
   title: "NFT Exhibition Node",
@@ -12,19 +13,29 @@ export const metadata: Metadata = {
 };
 
 /**
- * Community acquisition wing — a growing record of NFTs collected from the VΣLOHE community.
+ * Community acquisition wing — live Tezos inventory with the existing
+ * community acquisition set as a resilient fallback.
  */
-export default function ExhibitionNodePage() {
+export default async function ExhibitionNodePage() {
+  let exhibitionItems = communityAcquisitions;
+
+  try {
+    const liveTezosItems = await getTezosExhibitionItems();
+    exhibitionItems = liveTezosItems;
+  } catch {
+    // Keep the exhibition renderable if TzKT is temporarily unavailable.
+  }
+
   return (
     <PageTransition>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         <GalleryBackLink />
         <SectionHeading
-          eyebrow="Node // Community Acquisitions"
+          eyebrow="Node // Tezos Live Acquisitions"
           title="NFT Exhibition Node"
-          subtitle="A living exhibition of artworks acquired from the VΣLOHE community — collected, verified, and preserved within the system."
+          subtitle="A living exhibition of artworks acquired by VΣLOHE SYSTEM — sourced live from Tezos and preserved within the system."
         />
-        <NftGrid items={communityAcquisitions} />
+        <NftGrid items={exhibitionItems} />
       </div>
     </PageTransition>
   );
