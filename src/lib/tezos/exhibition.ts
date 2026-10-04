@@ -58,8 +58,7 @@ function pickMedia(metadata: TzktMetadata) {
     resolveUri(metadata.displayUri) ??
     resolveUri(metadata.thumbnailUri) ??
     resolveUri(imageFormat?.uri) ??
-    resolveUri(metadata.artifactUri) ??
-    "/logs/placeholder.png";
+    resolveUri(metadata.artifactUri);
 
   return {
     image,
@@ -94,8 +93,8 @@ async function fetchHolders(token: TzktToken): Promise<TzktHolder[]> {
   const params = new URLSearchParams({
     "token.id": String(token.id),
     "balance.gt": "0",
-    "limit": "10000",
-    "select": "account.address,balance",
+    limit: "10000",
+    select: "account.address,balance",
   });
 
   try {
@@ -115,7 +114,7 @@ export async function getTezosExhibitionItems(): Promise<NftItem[]> {
   const params = new URLSearchParams({
     account: TEZOS_WALLET,
     "balance.gt": "0",
-    standard: "fa2",
+    "token.standard": "fa2",
     limit: "10000",
     "sort.desc": "lastLevel",
   });
@@ -131,6 +130,9 @@ export async function getTezosExhibitionItems(): Promise<NftItem[]> {
       const token = entry.token;
       const metadata = token.metadata ?? {};
       const media = pickMedia(metadata);
+
+      if (!media.image) return null;
+
       const holders = await fetchHolders(token);
       const creators = metadata.creators ?? [];
       const creator = creators[0] ?? "Unknown creator";
@@ -161,11 +163,10 @@ export async function getTezosExhibitionItems(): Promise<NftItem[]> {
         rarity: "rare" as const,
         objkt: `https://objkt.com/tokens/${token.contract.address}/${token.tokenId}`,
         status: "Operational" as const,
-        year: new Date().getFullYear(),
         tags: ["tezos", "live", "acquisition"],
       } satisfies NftItem;
     }),
   );
 
-  return items;
+  return items.filter((item): item is NftItem => item !== null);
 }
