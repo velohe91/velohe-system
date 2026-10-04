@@ -3,6 +3,7 @@ import { NftGrid } from "@/components/gallery/NftGrid";
 import { GalleryBackLink } from "@/components/gallery/GalleryBackLink";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { communityAcquisitions } from "@/data/community-acquisitions";
 import { getTezosExhibitionItems } from "@/lib/tezos/exhibition";
 
 export const metadata: Metadata = {
@@ -15,7 +16,13 @@ export const metadata: Metadata = {
  * Live exhibition wing — discovers NFTs currently held by the VΣLOHE Tezos wallet.
  */
 export default async function ExhibitionNodePage() {
-  const tezosNfts = await getTezosExhibitionItems();
+  let tezosNfts = communityAcquisitions;
+
+  try {
+    tezosNfts = await getTezosExhibitionItems();
+  } catch {
+    // Keep the exhibition renderable if the public Tezos indexer is temporarily unavailable.
+  }
 
   return (
     <PageTransition>
