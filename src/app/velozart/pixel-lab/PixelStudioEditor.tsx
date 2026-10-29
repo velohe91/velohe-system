@@ -845,7 +845,7 @@ export default function PixelStudioEditor() {
           <button type="button" className={styles.iconTool} onClick={exportPixil} title="Export .pixil" aria-label="Export .pixil">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M12 10v7m-3-3 3 3 3-3" /></svg>
           </button>
-          <button type="button" className={styles.iconTool} onClick={exportPng} title="Export PNG" aria-label="Export PNG">
+          <button type="button" className={styles.iconTool} onClick={() => exportPng()} title="Export PNG" aria-label="Export PNG">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 16l4-4 3 3 2-2 2 3M8 8h.01" /><path d="M12 2v6m-3-3 3 3 3-3" /></svg>
           </button>
           <label className={styles.iconTool} title="Import PNG" aria-label="Import PNG">
