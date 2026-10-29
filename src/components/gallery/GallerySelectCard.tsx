@@ -51,12 +51,15 @@ export function GallerySelectCard({
       initial={reduced ? false : { opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduced ? 0 : 0.12 * index, duration: 0.45 }}
-      whileHover={reduced ? undefined : { y: -6 }}
+      whileHover={reduced || !isOnline ? undefined : { y: -6 }}
       className="h-full"
     >
       <Link
-        href={entry.href ?? "#"}
-        className={`group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-xl border bg-panel/90 p-6 sm:p-8 hologram-border box-glow transition-shadow focus-visible:outline-none ${a.border} ${a.glow}`}
+        href={isOnline ? entry.href ?? "#" : "#"}
+        onClick={(event) => { if (!isOnline) event.preventDefault(); }}
+        tabIndex={isOnline ? undefined : -1}
+        aria-disabled={!isOnline}
+        className={`group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-xl border bg-panel/90 p-6 sm:p-8 hologram-border box-glow transition-shadow focus-visible:outline-none ${a.border} ${a.glow} ${!isOnline ? "cursor-default" : ""}`}
       >
         {/* Soft corner scan accent */}
         <div
@@ -108,12 +111,14 @@ export function GallerySelectCard({
             className={`mt-6 inline-flex items-center gap-2 font-sans text-xs uppercase tracking-[0.28em] transition-colors ${a.cta}`}
           >
             {entry.cta}
-            <span
-              className="translate-x-0 transition-transform group-hover:translate-x-1"
-              aria-hidden
-            >
-              →
-            </span>
+{isOnline && (
+              <span
+                className="translate-x-0 transition-transform group-hover:translate-x-1"
+                aria-hidden
+              >
+                →
+              </span>
+            )}
           </span>
         </div>
       </Link>
