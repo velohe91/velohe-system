@@ -37,6 +37,13 @@
 .check { display: flex; gap: 7px; align-items: center; color: #b5bad0; font-size: 10px; }
 .check input { accent-color: var(--purple); }
 .canvasArea { min-width: 0; display: flex; flex-direction: column; background: #0a0c14; }
+.fileToolbar { min-height: 40px; display: flex; align-items: center; gap: 3px; padding: 4px 10px; overflow-x: auto; border-bottom: 1px solid var(--stroke); background: #17191f; color: #f2efff; }
+.iconTool { position: relative; display: inline-flex; flex: 0 0 30px; width: 30px; height: 30px; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 2px; background: transparent; color: inherit; cursor: pointer; }
+.iconTool:hover { border-color: var(--purple); background: #272333; color: #ffffff; }
+.iconTool:focus-visible { outline: 1px solid var(--purple-soft); outline-offset: 1px; }
+.iconTool svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.iconTool input[type="file"] { display: none; }
+.toolbarDivider { width: 1px; height: 20px; margin: 0 5px; background: #56525e; flex: 0 0 1px; }
 .canvasToolbar { min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--stroke); color: #9399b2; font-size: 9px; letter-spacing: .08em; }
 .canvasToolbar b { color: #e5e1f4; margin-left: 7px; }
 .canvasControls { display: flex; align-items: center; gap: 7px; }
