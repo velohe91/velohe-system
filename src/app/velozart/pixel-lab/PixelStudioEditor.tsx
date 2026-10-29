@@ -317,8 +317,8 @@ export default function PixelStudioEditor() {
   };
 
   const drawLine = (pixels: string[], x0: number, y0: number, x1: number, y1: number, value: string) => {
-    let dx = Math.abs(x1 - x0); let sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0); let sy = y0 < y1 ? 1 : -1; let err = dx + dy;
+    const dx = Math.abs(x1 - x0); const sx = x0 < x1 ? 1 : -1;
+    const dy = -Math.abs(y1 - y0); const sy = y0 < y1 ? 1 : -1; let err = dx + dy;
     while (true) {
       stamp(pixels, x0, y0, value);
       if (x0 === x1 && y0 === y1) break;
@@ -676,6 +676,8 @@ export default function PixelStudioEditor() {
   const importPixil = async (file: File) => {
     setImporting(true);
     try {
+      // Pixil is an external file format with a flexible schema; validate its fields below.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = JSON.parse(await file.text()) as any;
       if (raw?.application !== "pixil" || !Array.isArray(raw.frames) || !raw.frames.length) throw new Error("This is not a supported Pixil project.");
       const width = Number(raw.width); const height = Number(raw.height);
