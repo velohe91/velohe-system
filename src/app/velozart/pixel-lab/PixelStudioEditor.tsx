@@ -7,7 +7,58 @@ type Tool = "pencil" | "eraser" | "fill" | "eyedropper" | "line" | "rect" | "ell
 type Layer = { id: number; name: string; visible: boolean; opacity: number; pixels: string[] };
 type Frame = { id: number; duration: number; layers: Layer[] };
 type Snapshot = { frames: Frame[]; frameIndex: number; layerId: number };
+type PixilProject = {
+  application?: unknown;
+  width?: unknown;
+  height?: unknown;
+  speed?: unknown;
+  currentFrame?: unknown;
+  name?: unknown;
+  frames?: Array<{
+    layers?: Array<{ src?: unknown; opacity?: unknown; name?: unknown; visible?: unknown; options?: { visible?: unknown }; id?: unknown }>;
+    speed?: unknown;
+    selectedLayer?: unknown;
+  }>;
+  colors?: Record<string, unknown>;
+};
 const TRANSPARENT = "";
+
+function svgCursor(svg: string, hotspotX: number, hotspotY: number) {
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${hotspotX} ${hotspotY}, crosshair`;
+}
+
+const CURSOR_PENCIL = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 21l4.2-1 12-12-3.2-3.2-12 12L3 21z" fill="#f4f0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 6l3 3M3 21l4.2-1-3.2-3.2L3 21z" fill="#a78bfa" stroke="#171923" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_BUCKET = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 10l7-7 10 10-7 7L4 10z" fill="#f4f0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 14l6 6M13 8l4 4M16 17l-2 4h7l-2-4" fill="none" stroke="#3ee0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_ERASER = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 15L13 5l7 7-8 8H7l-4-5z" fill="#f38ba8" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 10l7 7M12 20h9" fill="none" stroke="#f4f0ff" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_EYEDROPPER = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14 4l6 6-3 3-2-2-7 7-4 1 1-4 7-7-2-2 4-2z" fill="#3ee0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 18l2 2" stroke="#f4f0ff" stroke-width="1.5"/></svg>',
+  4,
+  20,
+);
+
+const TOOL_CURSORS: Record<Tool, string> = {
+  pencil: CURSOR_PENCIL,
+  line: CURSOR_PENCIL,
+  rect: CURSOR_PENCIL,
+  ellipse: CURSOR_PENCIL,
+  fill: CURSOR_BUCKET,
+  eraser: CURSOR_ERASER,
+  eyedropper: CURSOR_EYEDROPPER,
+  select: "crosshair",
+  text: "text",
+};
 
 const TOOL_LIST: { id: Tool; label: string; icon: string; group: string }[] = [
   { id: "pencil", label: "Pencil (P)", icon: "✏️", group: "DRAW" },
@@ -644,15 +695,6 @@ export default function PixelStudioEditor() {
     }
   };
 
-  const saveProject = () => {
-    try {
-      window.localStorage.setItem("cryptopanim-pixel-studio-v1", JSON.stringify({ dimensions, frames, frameIndex, activeLayerId, nextId, palette }));
-      setStatus("Project saved locally");
-    } catch {
-      setStatus("Save failed — local storage may be full");
-    }
-  };
-
   const exportGifFallback = () => {
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width; canvas.height = dimensions.height;
@@ -676,16 +718,15 @@ export default function PixelStudioEditor() {
   const importPixil = async (file: File) => {
     setImporting(true);
     try {
-      // Pixil is an external file format with a flexible schema; validate its fields below.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const raw = JSON.parse(await file.text()) as any;
-      if (raw?.application !== "pixil" || !Array.isArray(raw.frames) || !raw.frames.length) throw new Error("This is not a supported Pixil project.");
+      const raw = JSON.parse(await file.text()) as PixilProject;
+      const sourceFrames = raw?.frames;
+      if (raw?.application !== "pixil" || !Array.isArray(sourceFrames) || sourceFrames.length === 0) throw new Error("This is not a supported Pixil project.");
       const width = Number(raw.width); const height = Number(raw.height);
       if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 512 || height > 512) throw new Error("Unsupported canvas dimensions.");
       let id = 1;
       const importedFrames: Frame[] = [];
-      for (let fi = 0; fi < raw.frames.length; fi++) {
-        const sourceFrame = raw.frames[fi]; const sourceLayers = Array.isArray(sourceFrame.layers) ? sourceFrame.layers : [];
+      for (let fi = 0; fi < sourceFrames.length; fi++) {
+        const sourceFrame = sourceFrames[fi]; const sourceLayers = Array.isArray(sourceFrame.layers) ? sourceFrame.layers : [];
         const layers: Layer[] = [];
         for (const sourceLayer of sourceLayers) {
           const src = typeof sourceLayer.src === "string" ? sourceLayer.src.replace(/^data:image\/png[^,]*,/i, "data:image/png;base64,") : "";
@@ -713,8 +754,8 @@ export default function PixelStudioEditor() {
         importedFrames.push({ id: fi + 1, duration: Math.max(1, Number(sourceFrame.speed ?? raw.speed ?? 100)), layers });
       }
       const activeFrameIndex = Math.max(0, Math.min(importedFrames.length - 1, Number(raw.currentFrame ?? 0)));
-      const selectedSourceId = Number(raw.frames[activeFrameIndex]?.selectedLayer ?? 0);
-      const importedActiveLayer = importedFrames[activeFrameIndex].layers.find((layer, index) => Number((raw.frames[activeFrameIndex].layers ?? [])[index]?.id) === selectedSourceId) ?? importedFrames[activeFrameIndex].layers[importedFrames[activeFrameIndex].layers.length - 1];
+      const selectedSourceId = Number(sourceFrames[activeFrameIndex]?.selectedLayer ?? 0);
+      const importedActiveLayer = importedFrames[activeFrameIndex].layers.find((layer, index) => Number((sourceFrames[activeFrameIndex].layers ?? [])[index]?.id) === selectedSourceId) ?? importedFrames[activeFrameIndex].layers[importedFrames[activeFrameIndex].layers.length - 1];
       const importedPalette = raw.colors?.["bottom palette"] ?? raw.colors?.default;
       setDimensions({ width, height }); setFrames(importedFrames); setFrameIndex(activeFrameIndex); setActiveLayerId(importedActiveLayer.id); setNextId(id + 1); setDocumentName(String(raw.name || file.name.replace(/\\.pixil$/i, "")));
       if (Array.isArray(importedPalette) && importedPalette.length) setPalette(importedPalette.map((value: unknown) => { const hex = String(value).replace(/^#/, ""); return /^[0-9a-f]{6}$/i.test(hex) ? "#" + hex : "#000000"; }));
@@ -841,7 +882,7 @@ export default function PixelStudioEditor() {
           <button type="button" className={styles.iconTool} onClick={exportPixil} title="Export .pixil" aria-label="Export .pixil">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M12 10v7m-3-3 3 3 3-3" /></svg>
           </button>
-          <button type="button" className={styles.iconTool} onClick={exportPng} title="Export PNG" aria-label="Export PNG">
+          <button type="button" className={styles.iconTool} onClick={() => exportPng()} title="Export PNG" aria-label="Export PNG">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 16l4-4 3 3 2-2 2 3M8 8h.01" /><path d="M12 2v6m-3-3 3 3 3-3" /></svg>
           </button>
           <label className={styles.iconTool} title="Import PNG" aria-label="Import PNG">
@@ -873,7 +914,7 @@ export default function PixelStudioEditor() {
               backgroundSize: `${zoom * 2}px ${zoom * 2}px`,
               backgroundPosition: `0 0, 0 ${zoom}px, ${zoom}px -${zoom}px, -${zoom}px 0`,
             }}>
-              <canvas ref={canvasRef} style={{ width: dimensions.width * zoom, height: dimensions.height * zoom, imageRendering: "pixelated", touchAction: "none" }} onContextMenu={(event) => event.preventDefault()} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
+              <canvas ref={canvasRef} style={{ width: dimensions.width * zoom, height: dimensions.height * zoom, imageRendering: "pixelated", touchAction: "none", cursor: TOOL_CURSORS[tool] }} onContextMenu={(event) => event.preventDefault()} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
             </div>
           </div>
           <footer className={styles.canvasFooter}><span>{status}</span><span>{tool.toUpperCase()} · {color.toUpperCase()}</span><span>PIXEL PERFECT MODE</span></footer>
@@ -886,7 +927,7 @@ export default function PixelStudioEditor() {
         <aside className={styles.properties}>
           <section className={styles.panel}>
             <div className={styles.panelHeading}><div><span className={styles.panelIcon}>◈</span><strong>COLOR LAB</strong></div><button type="button" onClick={() => setPalette((p) => [...p, color])} title="Add current color to palette">＋</button></div>
-            <div className={styles.colorControls}><div className={styles.colorSwatches} aria-label="Primary and secondary colors"><HexColorPicker value={color} onChange={setColor} label="Primary" swatchClass={styles.primaryColor} /><HexColorPicker value={secondaryColor} onChange={setSecondaryColor} label="Secondary" swatchClass={styles.secondaryColor} /><button type="button" className={styles.swapColors} onClick={() => { setColor(secondaryColor); setSecondaryColor(color); }} title="Swap primary and secondary colors (X)">⇄</button><button type="button" className={styles.defaultColors} onClick={() => { setColor("#000000"); setSecondaryColor("#ffffff"); }} title="Reset colors to black and white">↖</button></div></div>
+            <div className={styles.colorControls}><div className={styles.colorSwatches} aria-label="Primary and secondary colors"><HexColorPicker value={color} onChange={(value) => { setColor(value); setPalette((current) => current.includes(value) ? current : [...current, value]); }} label="Primary" swatchClass={styles.primaryColor} /><HexColorPicker value={secondaryColor} onChange={setSecondaryColor} label="Secondary" swatchClass={styles.secondaryColor} /><button type="button" className={styles.swapColors} onClick={() => { setColor(secondaryColor); setSecondaryColor(color); }} title="Swap primary and secondary colors (X)">⇄</button><button type="button" className={styles.defaultColors} onClick={() => { setColor("#000000"); setSecondaryColor("#ffffff"); }} title="Reset colors to black and white">↖</button></div></div>
             <div className={styles.swatches}>{palette.map((swatch, i) => <button type="button" key={swatch + i} title={`${swatch} · Left-click to select · Right-click to remove`} style={{ background: swatch }} className={color === swatch ? styles.selectedSwatch : ""} onClick={() => setColor(swatch)} onContextMenu={(event) => { event.preventDefault(); setPalette((current) => current.filter((_, index) => index !== i)); setStatus(`Removed color ${swatch.toUpperCase()} from palette`); }} />)}</div>
             
             <button type="button" className={styles.fullButton} onClick={() => setPalette(DEFAULT_PALETTE)}>Reset default palette</button>
