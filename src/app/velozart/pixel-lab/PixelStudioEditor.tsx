@@ -745,13 +745,31 @@ export default function PixelStudioEditor() {
         <section className={styles.canvasArea} aria-label="Pixel canvas">
           <div className={styles.canvasToolbar}>
             <span>CANVAS <b>{dimensions.width} × {dimensions.height}</b></span>
-        <div className={styles.topActions}>
-          <label className={styles.export} style={{ cursor: importing ? "wait" : "pointer" }}>{importing ? "Importing…" : "Import .pixil"}<input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} style={{ display: "none" }} /></label>
-          <button type="button" onClick={exportPixil}>Export .pixil</button>
-          <button type="button" className={styles.export} onClick={exportPng}>Export PNG</button>
-          <button type="button" onClick={() => pngInputRef.current?.click()}>Import PNG</button>
-          <input ref={pngInputRef} type="file" accept="image/png,.png" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPng(file); event.currentTarget.value = ""; }} style={{ display: "none" }} />
-          <button type="button" onClick={saveProject}>Save</button>
+        <div className={styles.fileToolbar} role="toolbar" aria-label="Project tools">
+          <label className={styles.iconTool} title={importing ? "Importing project…" : "Import .pixil"} aria-label="Import .pixil" style={{ cursor: importing ? "wait" : "pointer" }}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z" /><path d="M15 3v5h4M12 17V10m-3 3 3-3 3 3" /></svg>
+            <input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} />
+          </label>
+          <button type="button" className={styles.iconTool} onClick={exportPixil} title="Export .pixil" aria-label="Export .pixil">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5zM15 3v5h4M12 10v7m-3-3 3 3 3-3" /></svg>
+          </button>
+          <button type="button" className={styles.iconTool} onClick={exportPng} title="Export PNG" aria-label="Export PNG">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 16l4-4 3 3 2-2 2 3M8 8h.01" /><path d="M12 2v6m-3-3 3 3 3-3" /></svg>
+          </button>
+          <label className={styles.iconTool} title="Import PNG" aria-label="Import PNG">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 16l4-4 3 3 2-2 2 3M8 8h.01" /><path d="M12 2v6m-3-3 3 3 3-3" /></svg>
+            <input ref={pngInputRef} type="file" accept="image/png,.png" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPng(file); event.currentTarget.value = ""; }} />
+          </label>
+          <button type="button" className={styles.iconTool} onClick={saveProject} title="Save project" aria-label="Save project">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h14l3 3v15H4zM8 3v6h8V3M8 21v-8h8v8" /></svg>
+          </button>
+          <span className={styles.toolbarDivider} aria-hidden="true" />
+          <button type="button" className={styles.iconTool} onClick={undo} title="Undo (Ctrl+Z)" aria-label="Undo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5M4 12h9a6 6 0 0 1 6 6" /></svg>
+          </button>
+          <button type="button" className={styles.iconTool} onClick={redo} title="Redo (Ctrl+Y)" aria-label="Redo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5m5-5h-9a6 6 0 0 0-6 6" /></svg>
+          </button>
         </div>
             <div className={styles.canvasControls}>
               <button type="button" onClick={() => setZoom((v) => Math.max(4, v - 2))}>−</button><span>{Math.round(zoom / 12 * 100)}%</span><button type="button" onClick={() => setZoom((v) => Math.min(28, v + 2))}>+</button>
