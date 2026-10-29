@@ -7,6 +7,20 @@ type Tool = "pencil" | "eraser" | "fill" | "eyedropper" | "line" | "rect" | "ell
 type Layer = { id: number; name: string; visible: boolean; opacity: number; pixels: string[] };
 type Frame = { id: number; duration: number; layers: Layer[] };
 type Snapshot = { frames: Frame[]; frameIndex: number; layerId: number };
+type PixilProject = {
+  application?: unknown;
+  width?: unknown;
+  height?: unknown;
+  speed?: unknown;
+  currentFrame?: unknown;
+  name?: unknown;
+  frames?: Array<{
+    layers?: Array<{ src?: unknown; opacity?: unknown; name?: unknown; visible?: unknown; options?: { visible?: unknown }; id?: unknown }>;
+    speed?: unknown;
+    selectedLayer?: unknown;
+  }>;
+  colors?: Record<string, unknown>;
+};
 const TRANSPARENT = "";
 
 const TOOL_LIST: { id: Tool; label: string; icon: string; group: string }[] = [
@@ -317,8 +331,8 @@ export default function PixelStudioEditor() {
   };
 
   const drawLine = (pixels: string[], x0: number, y0: number, x1: number, y1: number, value: string) => {
-    let dx = Math.abs(x1 - x0); let sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0); let sy = y0 < y1 ? 1 : -1; let err = dx + dy;
+    const dx = Math.abs(x1 - x0); const sx = x0 < x1 ? 1 : -1;
+    const dy = -Math.abs(y1 - y0); const sy = y0 < y1 ? 1 : -1; let err = dx + dy;
     while (true) {
       stamp(pixels, x0, y0, value);
       if (x0 === x1 && y0 === y1) break;
@@ -644,15 +658,6 @@ export default function PixelStudioEditor() {
     }
   };
 
-  const saveProject = () => {
-    try {
-      window.localStorage.setItem("cryptopanim-pixel-studio-v1", JSON.stringify({ dimensions, frames, frameIndex, activeLayerId, nextId, palette }));
-      setStatus("Project saved locally");
-    } catch {
-      setStatus("Save failed — local storage may be full");
-    }
-  };
-
   const exportGifFallback = () => {
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width; canvas.height = dimensions.height;
@@ -676,7 +681,7 @@ export default function PixelStudioEditor() {
   const importPixil = async (file: File) => {
     setImporting(true);
     try {
-      const raw = JSON.parse(await file.text()) as any;
+      const raw = JSON.parse(await file.text()) as PixilProject;
       if (raw?.application !== "pixil" || !Array.isArray(raw.frames) || !raw.frames.length) throw new Error("This is not a supported Pixil project.");
       const width = Number(raw.width); const height = Number(raw.height);
       if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 512 || height > 512) throw new Error("Unsupported canvas dimensions.");
