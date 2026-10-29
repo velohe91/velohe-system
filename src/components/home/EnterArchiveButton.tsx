@@ -14,7 +14,7 @@ export function EnterArchiveButton() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduced ? 0 : 2.1, duration: 0.5 }}
     >
-      <NeonButton href="/gallery" className="min-w-[240px] text-glow-sm">
+      <NeonButton href="/velozart" className="min-w-[240px] text-glow-sm">
         Enter the Archive
       </NeonButton>
     </motion.div>
