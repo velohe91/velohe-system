@@ -57,8 +57,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Animation export failed.";
-    return NextResponse.json({ error: message.includes("timed out") ? "Animation export took too long. Try fewer frames or a smaller size." : "Animation export failed. Please try again with a smaller animation." }, { status: 500 });
+    const details = error as Error & { stderr?: string; code?: string };
+    const message = typeof details?.message === "string" ? details.message : "Unknown animation export error.";
+    console.error("[Pixel Studio export]", message, details?.stderr ?? "");
+    const publicMessage = message.includes("timed out")
+      ? "Animation export took too long. Try fewer frames or a smaller size."
+      : message.includes("ENOENT") || details?.code === "ENOENT"
+        ? "The FFmpeg encoder is missing from the deployed server bundle. Redeploy after including the FFmpeg binary."
+        : details?.stderr?.trim() || message;
+    return NextResponse.json({ error: publicMessage }, { status: 500 });
   } finally {
     if (workDir) await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
   }
