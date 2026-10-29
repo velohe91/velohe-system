@@ -635,7 +635,6 @@ export default function PixelStudioEditor() {
     <main className={styles.studio}>
       <header className={styles.topbar}>
         <a className={styles.brand} href="/velozart">Panim Pixel Studio</a>
-        <div className={styles.document}><span className={styles.liveDot} /> {documentName.toUpperCase()} <span className={styles.saved}>LOCAL WORKSPACE</span></div>
         <div className={styles.topActions}>
           <label className={styles.export} style={{ cursor: importing ? "wait" : "pointer" }}>{importing ? "Importing…" : "Import .pixil"}<input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} style={{ display: "none" }} /></label>
           <button type="button" onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
