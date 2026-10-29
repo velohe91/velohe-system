@@ -743,9 +743,7 @@ export default function PixelStudioEditor() {
           </div>
         </aside>
         <section className={styles.canvasArea} aria-label="Pixel canvas">
-          <div className={styles.canvasToolbar}>
-            <span>CANVAS <b>{dimensions.width} × {dimensions.height}</b></span>
-        <div className={styles.fileToolbar} role="toolbar" aria-label="Project tools">
+          <div className={styles.fileToolbar} role="toolbar" aria-label="Project tools">
           <label className={styles.iconTool} title={importing ? "Importing project…" : "Import .pixil"} aria-label="Import .pixil" style={{ cursor: importing ? "wait" : "pointer" }}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z" /><path d="M15 3v5h4M12 17V10m-3 3 3-3 3 3" /></svg>
             <input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} />
@@ -771,6 +769,8 @@ export default function PixelStudioEditor() {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5m5-5h-9a6 6 0 0 0-6 6" /></svg>
           </button>
         </div>
+          <div className={styles.canvasToolbar}>
+            <span>CANVAS <b>{dimensions.width} × {dimensions.height}</b></span>
             <div className={styles.canvasControls}>
               <button type="button" onClick={() => setZoom((v) => Math.max(4, v - 2))}>−</button><span>{Math.round(zoom / 12 * 100)}%</span><button type="button" onClick={() => setZoom((v) => Math.min(28, v + 2))}>+</button>
               <button type="button" onClick={() => setOnionSkin((v) => !v)} className={onionSkin ? styles.toggled : ""}>Onion skin</button>
