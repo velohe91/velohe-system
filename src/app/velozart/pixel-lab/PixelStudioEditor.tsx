@@ -121,6 +121,7 @@ export default function PixelStudioEditor() {
   const [importing, setImporting] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [exportScale, setExportScale] = useState(1);
+  const [exportingAnimation, setExportingAnimation] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [frames, setFrames] = useState<Frame[]>([makeFrame(1, 32, 32, 1)]);
   const [frameIndex, setFrameIndex] = useState(0);
@@ -481,6 +482,70 @@ export default function PixelStudioEditor() {
     const link = document.createElement("a"); link.download = "panim-pixel-art.png"; link.href = canvas.toDataURL("image/png"); link.click();
     setStatus("PNG exported · " + canvas.width + " × " + canvas.height);
   };
+  const exportAnimation = async (format: "gif" | "mp4") => {
+    if (frames.length < 2 || exportingAnimation) return;
+    if (frames.length > 120) {
+      setStatus("Animation export supports up to 120 frames at a time");
+      return;
+    }
+    setExportingAnimation(true);
+    setStatus(`Preparing ${format.toUpperCase()} animation…`);
+    try {
+      const animationFrames = frames.map((frame) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = dimensions.width * exportScale;
+        canvas.height = dimensions.height * exportScale;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas export is unavailable.");
+        ctx.imageSmoothingEnabled = false;
+        for (const layer of frame.layers) {
+          if (!layer.visible || layer.opacity <= 0) continue;
+          const layerCanvas = document.createElement("canvas");
+          layerCanvas.width = dimensions.width;
+          layerCanvas.height = dimensions.height;
+          const layerContext = layerCanvas.getContext("2d");
+          if (!layerContext) throw new Error("Canvas layer export is unavailable.");
+          const image = layerContext.createImageData(dimensions.width, dimensions.height);
+          layer.pixels.forEach((value, i) => {
+            if (!value) return;
+            const n = Number.parseInt(value.slice(1), 16);
+            image.data[i * 4] = (n >> 16) & 255;
+            image.data[i * 4 + 1] = (n >> 8) & 255;
+            image.data[i * 4 + 2] = n & 255;
+            image.data[i * 4 + 3] = 255;
+          });
+          layerContext.putImageData(image, 0, 0);
+          ctx.globalAlpha = layer.opacity / 100;
+          ctx.drawImage(layerCanvas, 0, 0, canvas.width, canvas.height);
+        }
+        ctx.globalAlpha = 1;
+        return { dataUrl: canvas.toDataURL("image/png"), duration: Math.max(20, frame.duration) };
+      });
+      const response = await fetch("/api/pixel-studio/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format, width: dimensions.width * exportScale, height: dimensions.height * exportScale, frames: animationFrames }),
+      });
+      if (!response.ok) {
+        const problem = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(problem?.error ?? "Animation export failed.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `panim-animation.${format}`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus(`${format.toUpperCase()} animation exported · ${frames.length} frames`);
+      setSaveModalOpen(false);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Animation export failed");
+    } finally {
+      setExportingAnimation(false);
+    }
+  };
+
   const exportPixil = () => {
     try {
       const projectFrames = frames.map((frame) => ({
@@ -847,12 +912,12 @@ export default function PixelStudioEditor() {
               <button type="button" onClick={() => { exportPixil(); setSaveModalOpen(false); }}>Download .PIXIL</button>
               {frames.length > 1 && (
                 <>
-                  <button type="button" disabled title="Animated GIF export requires an encoder that is not currently included">Download .GIF <small>Not available yet</small></button>
-                  <button type="button" disabled title="MP4 export requires a supported browser video encoder">Download .MP4 <small>Not available yet</small></button>
+                  <button type="button" disabled={exportingAnimation} onClick={() => void exportAnimation("gif")}>{exportingAnimation ? "Exporting…" : "Download .GIF"}</button>
+                  <button type="button" disabled={exportingAnimation} onClick={() => void exportAnimation("mp4")}>{exportingAnimation ? "Exporting…" : "Download .MP4"}</button>
                 </>
               )}
             </div>
-            {frames.length > 1 && <p className={styles.exportNote}>This project has {frames.length} frames. GIF and MP4 options are shown for animation export, but their encoders still need to be added.</p>}
+            {frames.length > 1 && <p className={styles.exportNote}>{exportingAnimation ? "Encoding animation. Please keep this tab open…" : `This project has ${frames.length} frames. GIF and MP4 exports include frame timing and respect the selected output scale.`}</p>}
           </section>
         </div>
       )}
