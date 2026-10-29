@@ -2,6 +2,8 @@
 
 /* ─── VΣLOHE SYSTEM design tokens ─── */
 :root {
+  --font-orbitron: "Arial", "Helvetica Neue", sans-serif;
+  --font-share-tech: "Courier New", monospace;
   --bg-void: #03050a;
   --bg-panel: rgba(8, 16, 32, 0.78);
   --neon-blue: #00a3ff;
