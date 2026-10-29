@@ -143,5 +143,24 @@
 .dimensionFields > span { padding-bottom: 8px; color: #8c92a9; }
 .bottomBar { display: flex; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--stroke); color: #777d95; font-size: 9px; letter-spacing: .07em; background: #0d0f18; }
 .bottomBar span:first-child { color: #b7a3f4; }
+
+.modalBackdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: #05060bd9; backdrop-filter: blur(5px); }
+.saveModal { position: relative; width: min(100%, 520px); padding: 26px; border: 1px solid #39364a; border-top: 2px solid #8e75d4; border-radius: 5px; background: #202126; color: #f2efff; box-shadow: 0 22px 80px #0009; }
+.saveModal h2 { margin: 0 32px 8px 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.saveModal p { margin: 0 0 22px; color: #92929d; font-size: 12px; line-height: 1.5; }
+.modalClose { position: absolute; top: 12px; right: 14px; width: 30px; height: 30px; border: 1px solid #444450; background: #292a30; color: #e7e1f8; font-size: 21px; }
+.sizeLabel { display: block; margin-bottom: 12px; color: #d7d4e2; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.sizeSlider { display: grid; grid-template-columns: minmax(0, 1fr) 58px; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sizeSlider input { width: 100%; accent-color: #8e75d4; cursor: pointer; }
+.sizeSlider span { padding: 5px 8px; border: 1px solid #45434e; border-radius: 3px; background: #303137; color: #f2efff; font-size: 12px; text-align: center; }
+.outputDimensions { display: block; margin: 10px 0 22px; color: #e8e5f2; font-size: 13px; }
+.downloadOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.downloadOptions button { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; padding: 9px 10px; border: 1px solid #4e4b5b; border-radius: 3px; background: #303139; color: #f2efff; font-size: 11px; font-weight: 700; cursor: pointer; }
+.downloadOptions button:hover:not(:disabled) { border-color: #9c83e7; background: #38295e; }
+.downloadOptions button:disabled { cursor: not-allowed; opacity: .45; }
+.downloadOptions small { color: #c3bbd7; font-size: 8px; font-weight: 400; }
+.saveModal .exportNote { margin: 15px 0 0; font-size: 11px; }
+@media (max-width: 480px) { .saveModal { padding: 22px 17px; } .downloadOptions { grid-template-columns: 1fr; } }
+
 @media (max-width: 1120px) { .workspace { grid-template-columns: 130px minmax(300px, 1fr); } .properties { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; border-left: 0; border-top: 1px solid var(--stroke); } .panel { border-bottom: 0; } }
 @media (max-width: 700px) { .topbar { display: flex; flex-wrap: wrap; justify-content: center; padding: 12px; } .brand { width: 100%; text-align: center; } .topActions { justify-content: center; flex-wrap: wrap; } .workspace { grid-template-columns: 1fr; } .toolRail { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; border-right: 0; border-bottom: 1px solid var(--stroke); } .toolGroup { margin-bottom: 0; } .toolOptions { align-content: start; } .canvasScroller { min-height: 330px; padding: 18px; } .properties { grid-column: auto; display: block; } .panel { border-bottom: 1px solid var(--stroke); } .bottomBar { flex-wrap: wrap; } .panelActions { flex-wrap: wrap; } }
