@@ -26,13 +26,12 @@ const velozartEntries: GalleryHubEntry[] = [
     id: "node-forge",
     title: "NFT Velozart",
     description:
-      "Explore the Velozart NFT collection. The existing gallery is available here; live CryptoPanim collection integration can be added in a later step.",
-    href: "/gallery/velozart",
+      "NFT collections coming soon.",
     badge: "NFT COLLECTION",
     seriesHint: "DIGITAL ARTIFACTS",
-    cta: "Explore Collection",
-    accent: "violet",
-    status: "online",
+    cta: "NFT COLLECTIONS SOON",
+    accent: "gray",
+    status: "standby",
   },
 ];
 
