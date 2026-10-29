@@ -9,7 +9,7 @@
 .studio button { color: inherit; cursor: pointer; }
 .studio button:disabled { opacity: .35; cursor: not-allowed; }
 .topbar { min-height: 62px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 12px 20px; border-bottom: 1px solid var(--stroke); background: #0d0f18; }
-.brand { grid-column: 2; justify-self: center; color: #f2efff; text-decoration: none; font: 11px var(--font-pixel), monospace; white-space: nowrap; }
+.brand { grid-column: 2; justify-self: center; color: #f2efff; text-decoration: none; font: 16px var(--font-pixel), monospace; white-space: nowrap; }
 .brand span { color: var(--purple); }
 .document { display: flex; align-items: center; gap: 9px; color: #d9d7e9; letter-spacing: .05em; }
 .liveDot { width: 7px; height: 7px; background: #77e6a4; box-shadow: 0 0 9px #77e6a4; }
