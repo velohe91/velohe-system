@@ -407,7 +407,7 @@ export default function PixelStudioEditor() {
     }
     const start = startRef.current;
     const pixels = [...activeLayer.pixels];
-    const value = tool === "eraser" || eraseGestureRef.current ? TRANSPARENT : color;
+    const value = eraseGestureRef.current ? TRANSPARENT : color;
     if (tool === "line") drawLine(pixels, start.x, start.y, point.x, point.y, value);
     if (tool === "rect") {
       for (let x = Math.min(start.x, point.x); x <= Math.max(start.x, point.x); x++) { stamp(pixels, x, start.y, value); stamp(pixels, x, point.y, value); }
