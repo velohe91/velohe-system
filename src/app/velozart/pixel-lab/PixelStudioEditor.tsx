@@ -138,6 +138,7 @@ export default function PixelStudioEditor() {
   const [status, setStatus] = useState("Ready to create");
   const [selection, setSelection] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pngInputRef = useRef<HTMLInputElement>(null);
   const canvasScrollerRef = useRef<HTMLDivElement>(null);
   const clipboardRef = useRef<{ width: number; height: number; pixels: string[] } | null>(null);
   const drawingRef = useRef(false);
@@ -471,6 +472,99 @@ export default function PixelStudioEditor() {
     const link = document.createElement("a"); link.download = "panim-pixel-art.png"; link.href = canvas.toDataURL("image/png"); link.click();
     setStatus("PNG exported");
   };
+  const exportPixil = () => {
+    try {
+      const projectFrames = frames.map((frame) => ({
+        speed: frame.duration,
+        selectedLayer: frame.layers.find((layer) => layer.id === activeLayerId)?.id ?? frame.layers[frame.layers.length - 1]?.id ?? 1,
+        layers: frame.layers.map((layer) => {
+          const bitmap = document.createElement("canvas");
+          bitmap.width = dimensions.width;
+          bitmap.height = dimensions.height;
+          const ctx = bitmap.getContext("2d");
+          if (!ctx) throw new Error("Canvas export is unavailable.");
+          const image = ctx.createImageData(dimensions.width, dimensions.height);
+          layer.pixels.forEach((value, i) => {
+            if (!value) return;
+            const n = Number.parseInt(value.slice(1), 16);
+            image.data[i * 4] = (n >> 16) & 255;
+            image.data[i * 4 + 1] = (n >> 8) & 255;
+            image.data[i * 4 + 2] = n & 255;
+            image.data[i * 4 + 3] = 255;
+          });
+          ctx.putImageData(image, 0, 0);
+          return { id: layer.id, name: layer.name, src: bitmap.toDataURL("image/png"), opacity: layer.opacity / 100, visible: layer.visible, options: { visible: layer.visible } };
+        }),
+      }));
+      const project = {
+        application: "pixil",
+        version: "2.0",
+        name: documentName || "Panim Pixel Studio",
+        width: dimensions.width,
+        height: dimensions.height,
+        currentFrame: frameIndex,
+        frames: projectFrames,
+        colors: { default: palette, "bottom palette": palette },
+      };
+      const blob = new Blob([JSON.stringify(project)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = (documentName.trim() || "panim-pixel-art").replace(/[^a-z0-9-_]+/gi, "-") + ".pixil";
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus("Pixil project exported");
+    } catch (error) {
+      setStatus(error instanceof Error ? "Pixil export failed: " + error.message : "Pixil export failed");
+    }
+  };
+
+  const importPng = async (file: File) => {
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = url;
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("The PNG image could not be decoded."));
+      });
+      const bitmap = document.createElement("canvas");
+      bitmap.width = dimensions.width;
+      bitmap.height = dimensions.height;
+      const ctx = bitmap.getContext("2d", { willReadFrequently: true });
+      if (!ctx) throw new Error("Canvas image import is unavailable.");
+      ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, 0, 0, dimensions.width, dimensions.height);
+      const imageData = ctx.getImageData(0, 0, dimensions.width, dimensions.height);
+      const pixels = Array(dimensions.width * dimensions.height).fill(TRANSPARENT) as string[];
+      for (let i = 0; i < pixels.length; i++) {
+        if (imageData.data[i * 4 + 3] < 128) continue;
+        const red = imageData.data[i * 4].toString(16).padStart(2, "0");
+        const green = imageData.data[i * 4 + 1].toString(16).padStart(2, "0");
+        const blue = imageData.data[i * 4 + 2].toString(16).padStart(2, "0");
+        pixels[i] = "#" + red + green + blue;
+      }
+      remember();
+      updateActiveLayer(pixels);
+      setDocumentName(file.name.replace(/\.png$/i, "") || "Imported PNG");
+      setStatus("PNG imported into the active layer · scaled to canvas size");
+    } catch (error) {
+      setStatus(error instanceof Error ? "PNG import failed: " + error.message : "PNG import failed");
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const saveProject = () => {
+    try {
+      window.localStorage.setItem("cryptopanim-pixel-studio-v1", JSON.stringify({ dimensions, frames, frameIndex, activeLayerId, nextId, palette }));
+      setStatus("Project saved locally");
+    } catch {
+      setStatus("Save failed — local storage may be full");
+    }
+  };
+
   const exportGifFallback = () => {
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width; canvas.height = dimensions.height;
@@ -653,9 +747,11 @@ export default function PixelStudioEditor() {
             <span>CANVAS <b>{dimensions.width} × {dimensions.height}</b></span>
         <div className={styles.topActions}>
           <label className={styles.export} style={{ cursor: importing ? "wait" : "pointer" }}>{importing ? "Importing…" : "Import .pixil"}<input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} style={{ display: "none" }} /></label>
-          <button type="button" onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
-          <button type="button" onClick={redo} title="Redo (Ctrl+Y)">↷ Redo</button>
-          <button type="button" className={styles.export} onClick={exportPng}>Export PNG ↗</button>
+          <button type="button" onClick={exportPixil}>Export .pixil</button>
+          <button type="button" className={styles.export} onClick={exportPng}>Export PNG</button>
+          <button type="button" onClick={() => pngInputRef.current?.click()}>Import PNG</button>
+          <input ref={pngInputRef} type="file" accept="image/png,.png" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPng(file); event.currentTarget.value = ""; }} style={{ display: "none" }} />
+          <button type="button" onClick={saveProject}>Save</button>
         </div>
             <div className={styles.canvasControls}>
               <button type="button" onClick={() => setZoom((v) => Math.max(4, v - 2))}>−</button><span>{Math.round(zoom / 12 * 100)}%</span><button type="button" onClick={() => setZoom((v) => Math.min(28, v + 2))}>+</button>
