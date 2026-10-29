@@ -257,6 +257,8 @@ export default function PixelStudioEditor() {
     if (!scroller) return;
     const handleWheel = (event: WheelEvent) => {
       if (!event.ctrlKey && !event.metaKey) return;
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest("canvas")) return;
       event.preventDefault();
       if (event.deltaY === 0) return;
       setZoom((current) => Math.max(4, Math.min(28, current + (event.deltaY < 0 ? 2 : -2))));
