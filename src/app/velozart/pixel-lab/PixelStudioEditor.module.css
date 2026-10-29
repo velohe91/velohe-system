@@ -1,4 +1,5 @@
 .studio {
+  margin-top: 48px;
   --font-ui: "Share Tech Mono", "Courier New", monospace;
   --font-pixel: "Orbitron", "Courier New", monospace;
   --purple: #a78bfa; --purple-soft: #c4b5fd; --panel: #10131c; --panel-2: #151827; --stroke: #2a3148; --muted-studio: #8e93ab;
