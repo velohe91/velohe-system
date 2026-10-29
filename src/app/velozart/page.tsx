@@ -42,7 +42,7 @@ export default function VelozartPage() {
         <SectionHeading
           eyebrow="VΣLOHE SYSTEM // VELOZART"
           title="Velozart"
-          subtitle="Choose your destination: create pixel art in Panim Pixel Studio or enter the NFT Velozart gallery."
+          subtitle="Create pixel art in Panim Pixel Studio. NFT collections coming soon."
         />
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
           {velozartEntries.map((entry, index) => (
