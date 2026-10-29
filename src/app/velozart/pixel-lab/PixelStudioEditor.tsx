@@ -635,12 +635,6 @@ export default function PixelStudioEditor() {
     <main className={styles.studio}>
       <header className={styles.topbar}>
         <a className={styles.brand} href="/velozart">Panim Pixel Studio</a>
-        <div className={styles.topActions}>
-          <label className={styles.export} style={{ cursor: importing ? "wait" : "pointer" }}>{importing ? "Importing…" : "Import .pixil"}<input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} style={{ display: "none" }} /></label>
-          <button type="button" onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
-          <button type="button" onClick={redo} title="Redo (Ctrl+Y)">↷ Redo</button>
-          <button type="button" className={styles.export} onClick={exportPng}>Export PNG ↗</button>
-        </div>
       </header>
       <section className={styles.workspace}>
         <aside className={styles.toolRail} aria-label="Drawing tools">
@@ -657,6 +651,12 @@ export default function PixelStudioEditor() {
         <section className={styles.canvasArea} aria-label="Pixel canvas">
           <div className={styles.canvasToolbar}>
             <span>CANVAS <b>{dimensions.width} × {dimensions.height}</b></span>
+        <div className={styles.topActions}>
+          <label className={styles.export} style={{ cursor: importing ? "wait" : "pointer" }}>{importing ? "Importing…" : "Import .pixil"}<input type="file" accept=".pixil,application/json" disabled={importing} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPixil(file); event.currentTarget.value = ""; }} style={{ display: "none" }} /></label>
+          <button type="button" onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
+          <button type="button" onClick={redo} title="Redo (Ctrl+Y)">↷ Redo</button>
+          <button type="button" className={styles.export} onClick={exportPng}>Export PNG ↗</button>
+        </div>
             <div className={styles.canvasControls}>
               <button type="button" onClick={() => setZoom((v) => Math.max(4, v - 2))}>−</button><span>{Math.round(zoom / 12 * 100)}%</span><button type="button" onClick={() => setZoom((v) => Math.min(28, v + 2))}>+</button>
               <button type="button" onClick={() => setOnionSkin((v) => !v)} className={onionSkin ? styles.toggled : ""}>Onion skin</button>
