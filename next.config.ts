@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  outputFileTracingIncludes: {
+    "/api/pixel-studio/export": ["./node_modules/ffmpeg-static/ffmpeg"],
+  },
   images: {
     contentDispositionType: "inline",
     unoptimized: true,
