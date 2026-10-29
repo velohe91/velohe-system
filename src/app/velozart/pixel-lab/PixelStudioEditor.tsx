@@ -23,6 +23,43 @@ type PixilProject = {
 };
 const TRANSPARENT = "";
 
+function svgCursor(svg: string, hotspotX: number, hotspotY: number) {
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${hotspotX} ${hotspotY}, crosshair`;
+}
+
+const CURSOR_PENCIL = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 21l4.2-1 12-12-3.2-3.2-12 12L3 21z" fill="#f4f0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 6l3 3M3 21l4.2-1-3.2-3.2L3 21z" fill="#a78bfa" stroke="#171923" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_BUCKET = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 10l7-7 10 10-7 7L4 10z" fill="#f4f0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 14l6 6M13 8l4 4M16 17l-2 4h7l-2-4" fill="none" stroke="#3ee0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_ERASER = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 15L13 5l7 7-8 8H7l-4-5z" fill="#f38ba8" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 10l7 7M12 20h9" fill="none" stroke="#f4f0ff" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  3,
+  21,
+);
+const CURSOR_EYEDROPPER = svgCursor(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M14 4l6 6-3 3-2-2-7 7-4 1 1-4 7-7-2-2 4-2z" fill="#3ee0ff" stroke="#171923" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 18l2 2" stroke="#f4f0ff" stroke-width="1.5"/></svg>',
+  4,
+  20,
+);
+
+const TOOL_CURSORS: Record<Tool, string> = {
+  pencil: CURSOR_PENCIL,
+  line: CURSOR_PENCIL,
+  rect: CURSOR_PENCIL,
+  ellipse: CURSOR_PENCIL,
+  fill: CURSOR_BUCKET,
+  eraser: CURSOR_ERASER,
+  eyedropper: CURSOR_EYEDROPPER,
+  select: "crosshair",
+  text: "text",
+};
+
 const TOOL_LIST: { id: Tool; label: string; icon: string; group: string }[] = [
   { id: "pencil", label: "Pencil (P)", icon: "✏️", group: "DRAW" },
   { id: "eraser", label: "Eraser (E)", icon: "🧽", group: "DRAW" },
@@ -877,7 +914,7 @@ export default function PixelStudioEditor() {
               backgroundSize: `${zoom * 2}px ${zoom * 2}px`,
               backgroundPosition: `0 0, 0 ${zoom}px, ${zoom}px -${zoom}px, -${zoom}px 0`,
             }}>
-              <canvas ref={canvasRef} style={{ width: dimensions.width * zoom, height: dimensions.height * zoom, imageRendering: "pixelated", touchAction: "none" }} onContextMenu={(event) => event.preventDefault()} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
+              <canvas ref={canvasRef} style={{ width: dimensions.width * zoom, height: dimensions.height * zoom, imageRendering: "pixelated", touchAction: "none", cursor: TOOL_CURSORS[tool] }} onContextMenu={(event) => event.preventDefault()} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} />
             </div>
           </div>
           <footer className={styles.canvasFooter}><span>{status}</span><span>{tool.toUpperCase()} · {color.toUpperCase()}</span><span>PIXEL PERFECT MODE</span></footer>
