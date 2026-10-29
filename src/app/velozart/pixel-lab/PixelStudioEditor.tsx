@@ -682,13 +682,14 @@ export default function PixelStudioEditor() {
     setImporting(true);
     try {
       const raw = JSON.parse(await file.text()) as PixilProject;
-      if (raw?.application !== "pixil" || !Array.isArray(raw.frames) || !raw.frames.length) throw new Error("This is not a supported Pixil project.");
+      const sourceFrames = raw?.frames;
+      if (raw?.application !== "pixil" || !Array.isArray(sourceFrames) || sourceFrames.length === 0) throw new Error("This is not a supported Pixil project.");
       const width = Number(raw.width); const height = Number(raw.height);
       if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 512 || height > 512) throw new Error("Unsupported canvas dimensions.");
       let id = 1;
       const importedFrames: Frame[] = [];
-      for (let fi = 0; fi < raw.frames.length; fi++) {
-        const sourceFrame = raw.frames[fi]; const sourceLayers = Array.isArray(sourceFrame.layers) ? sourceFrame.layers : [];
+      for (let fi = 0; fi < sourceFrames.length; fi++) {
+        const sourceFrame = sourceFrames[fi]; const sourceLayers = Array.isArray(sourceFrame.layers) ? sourceFrame.layers : [];
         const layers: Layer[] = [];
         for (const sourceLayer of sourceLayers) {
           const src = typeof sourceLayer.src === "string" ? sourceLayer.src.replace(/^data:image\/png[^,]*,/i, "data:image/png;base64,") : "";
@@ -716,8 +717,8 @@ export default function PixelStudioEditor() {
         importedFrames.push({ id: fi + 1, duration: Math.max(1, Number(sourceFrame.speed ?? raw.speed ?? 100)), layers });
       }
       const activeFrameIndex = Math.max(0, Math.min(importedFrames.length - 1, Number(raw.currentFrame ?? 0)));
-      const selectedSourceId = Number(raw.frames[activeFrameIndex]?.selectedLayer ?? 0);
-      const importedActiveLayer = importedFrames[activeFrameIndex].layers.find((layer, index) => Number((raw.frames[activeFrameIndex].layers ?? [])[index]?.id) === selectedSourceId) ?? importedFrames[activeFrameIndex].layers[importedFrames[activeFrameIndex].layers.length - 1];
+      const selectedSourceId = Number(sourceFrames[activeFrameIndex]?.selectedLayer ?? 0);
+      const importedActiveLayer = importedFrames[activeFrameIndex].layers.find((layer, index) => Number((sourceFrames[activeFrameIndex].layers ?? [])[index]?.id) === selectedSourceId) ?? importedFrames[activeFrameIndex].layers[importedFrames[activeFrameIndex].layers.length - 1];
       const importedPalette = raw.colors?.["bottom palette"] ?? raw.colors?.default;
       setDimensions({ width, height }); setFrames(importedFrames); setFrameIndex(activeFrameIndex); setActiveLayerId(importedActiveLayer.id); setNextId(id + 1); setDocumentName(String(raw.name || file.name.replace(/\\.pixil$/i, "")));
       if (Array.isArray(importedPalette) && importedPalette.length) setPalette(importedPalette.map((value: unknown) => { const hex = String(value).replace(/^#/, ""); return /^[0-9a-f]{6}$/i.test(hex) ? "#" + hex : "#000000"; }));
