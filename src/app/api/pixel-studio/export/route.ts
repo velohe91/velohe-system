@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const run = promisify(execFile);
-const ffmpegPath = require("ffmpeg-static") as string | null;
+import ffmpegPath from "ffmpeg-static";
 
 type ExportFrame = { dataUrl: string; duration: number };
 type ExportRequest = { format: "gif" | "mp4"; width: number; height: number; frames: ExportFrame[] };
