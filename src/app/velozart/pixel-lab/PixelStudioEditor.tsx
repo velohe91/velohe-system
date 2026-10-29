@@ -119,6 +119,8 @@ export default function PixelStudioEditor() {
   const [dimensions, setDimensions] = useState({ width: 32, height: 32 });
   const [documentName, setDocumentName] = useState("Untitled");
   const [importing, setImporting] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [exportScale, setExportScale] = useState(1);
   const [hydrated, setHydrated] = useState(false);
   const [frames, setFrames] = useState<Frame[]>([makeFrame(1, 32, 32, 1)]);
   const [frameIndex, setFrameIndex] = useState(0);
@@ -456,9 +458,9 @@ export default function PixelStudioEditor() {
     setFrames((current) => current.map((frame, i) => i === frameIndex ? { ...frame, layers } : frame));
   };
 
-  const exportPng = () => {
+  const exportPng = (scale = 1) => {
     const canvas = document.createElement("canvas");
-    canvas.width = dimensions.width; canvas.height = dimensions.height;
+    canvas.width = dimensions.width * scale; canvas.height = dimensions.height * scale;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const image = ctx.createImageData(dimensions.width, dimensions.height);
@@ -468,9 +470,14 @@ export default function PixelStudioEditor() {
       const n = Number.parseInt(hex, 16);
       image.data[i * 4] = (n >> 16) & 255; image.data[i * 4 + 1] = (n >> 8) & 255; image.data[i * 4 + 2] = n & 255; image.data[i * 4 + 3] = 255;
     });
-    ctx.putImageData(image, 0, 0);
+    const source = document.createElement("canvas"); source.width = dimensions.width; source.height = dimensions.height;
+    const sourceContext = source.getContext("2d");
+    if (!sourceContext) return;
+    sourceContext.putImageData(image, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
     const link = document.createElement("a"); link.download = "panim-pixel-art.png"; link.href = canvas.toDataURL("image/png"); link.click();
-    setStatus("PNG exported");
+    setStatus("PNG exported · " + canvas.width + " × " + canvas.height);
   };
   const exportPixil = () => {
     try {
@@ -758,7 +765,7 @@ export default function PixelStudioEditor() {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 16l4-4 3 3 2-2 2 3M8 8h.01" /><path d="M12 2v6m-3-3 3 3 3-3" /></svg>
             <input ref={pngInputRef} type="file" accept="image/png,.png" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importPng(file); event.currentTarget.value = ""; }} />
           </label>
-          <button type="button" className={styles.iconTool} onClick={saveProject} title="Save project" aria-label="Save project">
+          <button type="button" className={styles.iconTool} onClick={() => { setExportScale(1); setSaveModalOpen(true); }} title="Save / Download" aria-label="Save / Download">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h14l3 3v15H4zM8 3v6h8V3M8 21v-8h8v8" /></svg>
           </button>
           <span className={styles.toolbarDivider} aria-hidden="true" />
@@ -821,6 +828,32 @@ export default function PixelStudioEditor() {
         </aside>
       </section>
       <footer className={styles.bottomBar}><span>✦ PANIM PIXEL STUDIO</span><span>DRAW · ANIMATE · CREATE</span><span>YOUR ART STAYS IN YOUR BROWSER</span></footer>
+      {saveModalOpen && (
+        <div className={styles.modalBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSaveModalOpen(false); }}>
+          <section className={styles.saveModal} role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+            <button type="button" className={styles.modalClose} onClick={() => setSaveModalOpen(false)} aria-label="Close download dialog">×</button>
+            <h2 id="save-modal-title">Download Drawing</h2>
+            <p>Choose the export size for your pixel art.</p>
+            <label className={styles.sizeLabel} htmlFor="export-size">SIZE</label>
+            <div className={styles.sizeSlider}>
+              <input id="export-size" type="range" min="1" max="64" value={exportScale} onChange={(event) => setExportScale(Number(event.target.value))} />
+              <span>× {exportScale}</span>
+            </div>
+            <strong className={styles.outputDimensions}>Width: {dimensions.width * exportScale} · Height: {dimensions.height * exportScale}</strong>
+            <div className={styles.downloadOptions}>
+              <button type="button" onClick={() => { exportPng(exportScale); setSaveModalOpen(false); }}>Download .PNG</button>
+              <button type="button" onClick={() => { exportPixil(); setSaveModalOpen(false); }}>Download .PIXIL</button>
+              {frames.length > 1 && (
+                <>
+                  <button type="button" disabled title="Animated GIF export requires an encoder that is not currently included">Download .GIF <small>Not available yet</small></button>
+                  <button type="button" disabled title="MP4 export requires a supported browser video encoder">Download .MP4 <small>Not available yet</small></button>
+                </>
+              )}
+            </div>
+            {frames.length > 1 && <p className={styles.exportNote}>This project has {frames.length} frames. GIF and MP4 options are shown for animation export, but their encoders still need to be added.</p>}
+          </section>
+        </div>
+      )}
     </main>
   );
 }
