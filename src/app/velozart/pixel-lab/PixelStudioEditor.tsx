@@ -23,6 +23,29 @@ const TOOL_LIST: { id: Tool; label: string; icon: string; group: string }[] = [
 
 const DEFAULT_PALETTE = ["#171923", "#ffffff", "#c4b5fd", "#a78bfa", "#7c3aed", "#3ee0ff", "#00a6a6", "#6fcf97", "#f6c177", "#f38ba8", "#e76f51", "#8b5e3c", "#5d7290", "#38465f", "#737994", "#000000"];
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Let the browser start the download before revoking the object URL.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function downloadUrl(url: string, filename: string) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 function makeLayer(id: number, width: number, height: number, name: string): Layer {
   return { id, name, visible: true, opacity: 100, pixels: Array(width * height).fill(TRANSPARENT) };
 }
@@ -479,7 +502,7 @@ export default function PixelStudioEditor() {
     sourceContext.putImageData(image, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-    const link = document.createElement("a"); link.download = "panim-pixel-art.png"; link.href = canvas.toDataURL("image/png"); link.click();
+    downloadUrl(canvas.toDataURL("image/png"), "panim-pixel-art.png");
     setStatus("PNG exported · " + canvas.width + " × " + canvas.height);
   };
   const exportAnimation = async (format: "gif" | "mp4") => {
@@ -531,12 +554,8 @@ export default function PixelStudioEditor() {
         throw new Error(problem?.error ?? "Animation export failed.");
       }
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `panim-animation.${format}`;
-      link.click();
-      URL.revokeObjectURL(url);
+      if (blob.size === 0) throw new Error("The animation export returned an empty file.");
+      downloadBlob(blob, `panim-animation.${format}`);
       setStatus(`${format.toUpperCase()} animation exported · ${frames.length} frames`);
       setSaveModalOpen(false);
     } catch (error) {
@@ -581,12 +600,7 @@ export default function PixelStudioEditor() {
         colors: { default: palette, "bottom palette": palette },
       };
       const blob = new Blob([JSON.stringify(project)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = (documentName.trim() || "panim-pixel-art").replace(/[^a-z0-9-_]+/gi, "-") + ".pixil";
-      link.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, (documentName.trim() || "panim-pixel-art").replace(/[^a-z0-9-_]+/gi, "-") + ".pixil");
       setStatus("Pixil project exported");
     } catch (error) {
       setStatus(error instanceof Error ? "Pixil export failed: " + error.message : "Pixil export failed");
