@@ -14,7 +14,7 @@ export function EnterArchiveButton() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduced ? 0 : 2.1, duration: 0.5 }}
     >
-      <NeonButton href="/velozart" className="min-w-[240px] text-glow-sm">
+      <NeonButton href="/velozart/pixel-lab" className="min-w-[240px] text-glow-sm">
         Panim Pixel Studio
       </NeonButton>
     </motion.div>
