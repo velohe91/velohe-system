@@ -18,7 +18,9 @@ export function GallerySelectScreen() {
       />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-        {galleryHubEntries.map((entry, i) => (
+        {galleryHubEntries
+          .filter((entry) => entry.id !== "exhibition-node")
+          .map((entry, i) => (
           <GallerySelectCard key={entry.id} entry={entry} index={i} />
         ))}
       </div>
