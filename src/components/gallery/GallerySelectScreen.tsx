@@ -3,6 +3,7 @@
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GallerySelectCard } from "@/components/gallery/GallerySelectCard";
 import { galleryHubEntries } from "@/data/galleries";
+import { EnterArchiveButton } from "@/components/home/EnterArchiveButton";
 
 /**
  * Gallery gate — pick a sector before entering a catalog.
@@ -20,6 +21,10 @@ export function GallerySelectScreen() {
         {galleryHubEntries.map((entry, i) => (
           <GallerySelectCard key={entry.id} entry={entry} index={i} />
         ))}
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        <EnterArchiveButton />
       </div>
     </div>
   );
