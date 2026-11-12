@@ -3,7 +3,6 @@
 import { GlowOrb } from "@/components/effects/GlowOrb";
 import { AnimatedLogo } from "@/components/home/AnimatedLogo";
 import { SystemBootSequence } from "@/components/home/SystemBootSequence";
-import { EnterArchiveButton } from "@/components/home/EnterArchiveButton";
 import { PlayGameButton } from "@/components/home/PlayGameButton";
 import { MintSoonButton } from "@/components/home/MintSoonButton";
 import { SITE_TAGLINE } from "@/lib/constants";
@@ -43,7 +42,6 @@ export default function HomePage() {
         <SystemBootSequence />
         <PlayGameButton />
         <MintSoonButton />
-        <EnterArchiveButton />
       </div>
     </section>
   );
