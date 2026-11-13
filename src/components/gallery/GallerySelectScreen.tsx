@@ -17,7 +17,7 @@ export function GallerySelectScreen() {
         subtitle="Choose a sector to enter. Each wing holds a distinct archive of identities and artworks."
       />
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
         {galleryHubEntries
           .filter((entry) => entry.id !== "exhibition-node")
           .map((entry, i) => (
