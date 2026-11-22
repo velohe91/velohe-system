@@ -4,7 +4,7 @@ import { GlowOrb } from "@/components/effects/GlowOrb";
 import { AnimatedLogo } from "@/components/home/AnimatedLogo";
 import { SystemBootSequence } from "@/components/home/SystemBootSequence";
 import { PlayGameButton } from "@/components/home/PlayGameButton";
-import { MintSoonButton } from "@/components/home/MintSoonButton";
+import { MintSoonButton } from "@/components/home/MintSoonButton";\nimport { EnterArchiveButton } from "@/components/home/EnterArchiveButton";
 import { SITE_TAGLINE } from "@/lib/constants";
 import { motion } from "framer-motion";
 
@@ -41,7 +41,7 @@ export default function HomePage() {
 
         <SystemBootSequence />
         <PlayGameButton />
-        <MintSoonButton />
+        <MintSoonButton />\n        <EnterArchiveButton href="https://velohesystem.com/gallery/archive" label="Enter Archive" />
       </div>
     </section>
   );
