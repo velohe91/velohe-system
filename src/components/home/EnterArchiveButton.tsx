@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-export function EnterArchiveButton({\n  href = "/velozart/pixel-lab",\n  label = "Panim Pixel Studio",\n}: {\n  href?: string;\n  label?: string;\n} = {}) {
+export function EnterArchiveButton({
+  href = "/velozart/pixel-lab",
+  label = "Panim Pixel Studio",
+}: {
+  href?: string;
+  label?: string;
+} = {}) {
   const reduced = usePrefersReducedMotion();
 
   return (
@@ -14,8 +20,8 @@ export function EnterArchiveButton({\n  href = "/velozart/pixel-lab",\n  label =
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: reduced ? 0 : 2.1, duration: 0.5 }}
     >
-      <NeonButton href="/velozart/pixel-lab" className="min-w-[240px] text-glow-sm">
-        Panim Pixel Studio
+      <NeonButton href={href} className="min-w-[240px] text-glow-sm">
+        {label}
       </NeonButton>
     </motion.div>
   );
