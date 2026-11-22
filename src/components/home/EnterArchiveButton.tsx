@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-export function EnterArchiveButton() {
+export function EnterArchiveButton({\n  href = "/velozart/pixel-lab",\n  label = "Panim Pixel Studio",\n}: {\n  href?: string;\n  label?: string;\n} = {}) {
   const reduced = usePrefersReducedMotion();
 
   return (
